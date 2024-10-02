@@ -6,6 +6,12 @@
 
 The **Activity Tracker Agent** is a Python-based desktop application designed to monitor user activity and differentiate between genuine user behavior and automated/scripted inputs. It includes features such as mouse and keyboard tracking, time zone detection, and configurable screenshot intervals, with an optional blur feature. This project was developed to track employee activity and can capture screenshots that are uploaded to a cloud storage solution.
 
+| Architecture |
+|:------------:|
+|![Configuration Interface](public/charts.gif)|
+
+<!-- ![Configuration Interface](public/charts_whitebg.gif) -->
+
 ## Features
 
 ### 🔍 Activity Tracking
