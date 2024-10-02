@@ -1,5 +1,3 @@
-# click_detection.py
-
 from pynput import mouse
 
 # Initialize variables to track clicks and position
@@ -35,7 +33,7 @@ def detect_clicks():
 
             # Check if the click count exceeds the limit
             if click_count > CLICK_LIMIT:
-                print("Bot detection triggered (excessive clicks without movement)")
+                print("Bot detected !")
                 # Reset click count after detection
                 click_count = 0
 
