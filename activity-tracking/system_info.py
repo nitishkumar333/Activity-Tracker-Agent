@@ -1,7 +1,6 @@
 import threading
 import platform
 import psutil
-from getmac import get_mac_address
 
 def gather_system_info(info_dict):
     """Gathers system information and updates the provided dictionary."""
