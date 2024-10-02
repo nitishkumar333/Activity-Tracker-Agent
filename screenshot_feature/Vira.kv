@@ -1,10 +1,10 @@
 <ViraMain>:
-    id:ViraMain
+    id: ViraMain
     orientation: 'vertical'
 
     # Video and Details Section at the top
     BoxLayout:
-        id:Top
+        id: Top
         orientation: 'horizontal'
         size_hint_y: 0.3
         padding: [0, 0]  # Remove padding
@@ -30,8 +30,8 @@
                 FloatLayout:
                     # Center the image in this FloatLayout
                     Image:
-                        id:Logo
-                        source: 'Images\Vira3.png'
+                        id: Logo
+                        source: 'Images/Vira3.png'
                         size_hint: None, None  # Size not fixed; will set size below
                         size: self.parent.width * 0.6, self.parent.width * 0.6  # Maintain aspect ratio
                         pos_hint: {'center_x': 0.5, 'center_y': 0.5}  # Center horizontally and vertically
@@ -62,8 +62,6 @@
                 Rectangle:
                     pos: self.pos
                     size: self.size
-           
-
 
     # Box to hold the horizontal line
     Widget:
@@ -118,8 +116,6 @@
             Widget:
                 size_hint_y: 1  # Fills the remaining space but does not contribute to height
 
-            # Add the black line on the right side of the sidebar as a separate widget
-
         # Main content with ScreenManager
         ScreenManager:
             id: screen_manager
@@ -134,7 +130,6 @@
                 name: 'about'
 
 <ScreenManager>:
-    
     size_hint_y: None
     height: self.parent.height
 
@@ -180,7 +175,7 @@
             size_hint_y: None
             height: '50dp'
             spacing: 0
-            
+
             # Equal spacing from left of the start button
             Widget:
                 size_hint_x: 1
@@ -230,23 +225,101 @@
             size_hint_y: None
             height: self.parent.height * 0.4
 
-
-
 <ConfigScreen>:
     BoxLayout:
+        orientation: 'vertical'
+        padding: dp(20)
+        spacing: dp(10)
         canvas.before:
             Color:
-                rgba: 1, 1, 1, 1  # White background for config screen
+                rgba: 255, 20, 1, 1  # White background for config screen
             Rectangle:
                 pos: self.pos
                 size: self.size
+
+        # Save Directory Input
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: None
+            height: dp(40)
+            spacing: dp(10)
+
+            Label:
+                text: "Save Directory:"
+                size_hint_x: 0.3
+                halign: 'right'
+                valign: 'middle'
+                text_size: self.size
+                color: 0, 0, 0, 1  # Set text color to black
+
+            TextInput:
+                id: directory_input
+                text: ""
+                multiline: False
+                size_hint_x: 0.7
+
+        # Interval Input
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: None
+            height: dp(40)
+            spacing: dp(10)
+
+            Label:
+                text: "Interval (seconds):"
+                size_hint_x: 0.3
+                halign: 'right'
+                valign: 'middle'
+                text_size: self.size
+                color: 0, 0, 0, 1  # Set text color to black
+
+            TextInput:
+                id: interval_input
+                text: "30"
+                multiline: False
+                input_filter: 'int'
+                size_hint_x: 0.7
+
+        # Blur Checkbox
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: None
+            height: dp(40)
+            spacing: dp(10)
+
+            Label:
+                text: "Blur Screenshots:"
+                size_hint_x: 0.3
+                halign: 'right'
+                valign: 'middle'
+                text_size: self.size
+                color: 0, 0, 0, 1  # Set text color to black
+
+            CheckBox:
+                id: blur_checkbox
+                active: False
+                size_hint_x: 0.7
+
+        # Start/Stop Button
+        Button:
+            id: start_stop_button
+            text: "Start"
+            size_hint_y: None
+            height: dp(50)
+            background_color: (0.2, 0.6, 0.8, 1)
+            color: (1, 1, 1, 1)
+            on_press: root.toggle_screenshots()
+
+        # Status Label
         Label:
-            text: 'Config Screen'
-            font_size: 24
-            color: (0, 0, 0, 1)  # Black text
+            id: status_label
+            text: "Ready to start"
+            size_hint_y: None
+            height: dp(30)
+            color: 0, 0, 0, 1  # Set text color to black
             halign: 'center'
             valign: 'middle'
-            text_size: self.size
+            text_size: self.width, None
 
 <AboutScreen>:
     BoxLayout:
@@ -287,8 +360,6 @@
             padding: dp(10)  # Padding inside the label for better readability
             text_size: self.width, None  # Set text size width to the label's width for centering
 
-
-
 # Reusable button style for the sidebar
 <StyledButton@Button>:
     size_hint_y: None
@@ -302,4 +373,4 @@
         RoundedRectangle:
             pos: self.pos
             size: self.size
-            radius: [20, 20, 20, 20]  
+            radius: [20, 20, 20, 20]
