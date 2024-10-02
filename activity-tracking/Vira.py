@@ -12,8 +12,13 @@ from plyer import notification
 from system_info import get_system_info
 from tracking_logic.final import Final_Tracker
 from dotenv import load_dotenv
-import pyautogui, threading, time, os
+import pyautogui
+import threading
+import time
+import os, uuid, re
 from PIL import Image, ImageFilter
+import boto3
+from io import BytesIO
 
 load_dotenv() # load environment variables
 
@@ -88,10 +93,18 @@ class HomeScreen(Screen):
 
 
 class ConfigScreen(Screen):
+    mac_address = ':'.join(re.findall('..', '%012x' % uuid.getnode()))
     def __init__(self, **kwargs):
         super(ConfigScreen, self).__init__(**kwargs)
         self.is_running = False
         self.screenshot_thread = None
+        self.s3_client = boto3.client(
+            's3',
+            aws_access_key_id = aws_access_key_id,
+            aws_secret_access_key = aws_secret_access_key,
+            region_name = region_name
+        )
+        self.bucket_name = bucket_name
 
     def toggle_screenshots(self):
         if self.is_running:
@@ -122,6 +135,16 @@ class ConfigScreen(Screen):
             self.screenshot_thread.join()
         self.ids.status_label.text = "Screenshot capture stopped"
 
+    def upload_to_s3(self, image):
+        # Save screenshot to an in-memory file (BytesIO)
+        img_byte_arr = BytesIO()
+        image.save(img_byte_arr, format='PNG')
+        img_byte_arr.seek(0)
+        tempuuid = str(uuid.uuid4())[0:15] # random string
+        # Define S3 file path and upload
+        s3_path = f'{self.mac_address}/screenshots/{tempuuid}.png'
+        self.s3_client.upload_fileobj(img_byte_arr, self.bucket_name, s3_path)
+
     def take_screenshots(self):
         directory = self.ids.directory_input.text.strip() or '.'
         if not os.path.exists(directory):
@@ -146,6 +169,7 @@ class ConfigScreen(Screen):
                 ss = ss.filter(ImageFilter.GaussianBlur(radius=5))
 
             try:
+                self.upload_to_s3(ss)
                 print(f"Screenshot saved: {path}")
                 count += 1
             except Exception as e:
