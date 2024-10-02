@@ -26,6 +26,12 @@ The **Activity Tracker Agent** is a Python-based desktop application designed to
 - Securely uploads screenshots and logs to cloud storage like Amazon S3.
 - Handles network disconnection by queuing uploads and retrying when the connection is restored.
 
+## 📸 Screenshots
+
+| **Configuration Interface**                                   | **Blurred Screenshot Option**                           | **Non-Blurred Screenshot**                            |
+|------------------------------------------------------|---------------------------------------------------------|-------------------------------------------------------|
+| ![Configuration Interface](public/config_page.png)    | ![Blurred Screenshot](public/screenshot.png) | ![Non-Blurred Screenshot](public/screenshotnoblurr.png) |
+
 ## Working
 
 ### Main Workflow
@@ -109,12 +115,6 @@ def detect_clicks():
    ```bash
    python final.py
    ```
-
-## 📸 Screenshots
-
-| **Configuration Interface**                                   | **Blurred Screenshot Option**                           | **Non-Blurred Screenshot**                            |
-|------------------------------------------------------|---------------------------------------------------------|-------------------------------------------------------|
-| ![Configuration Interface](public/config_page.png)    | ![Blurred Screenshot](public/screenshot.png) | ![Non-Blurred Screenshot](public/screenshotnoblurr.png) |
 
 ## 🎯 Future Enhancements
 - **Advanced Filtering**: Implement more sophisticated filtering techniques for detecting automation.
