@@ -32,7 +32,10 @@ class HomeScreen(Screen):
         self.seconds += 1
         hours, remainder = divmod(self.seconds, 3600)
         minutes, seconds = divmod(remainder, 60)
-        self.timer_text = f"{hours:02}:{minutes:02}:{seconds:02}"          
+        self.timer_text = f"{hours:02}:{minutes:02}:{seconds:02}"  
+
+
+        
 
 class ConfigScreen(Screen):
     pass
