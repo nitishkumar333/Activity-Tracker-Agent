@@ -1,5 +1,6 @@
 import keyboard
 import time
+from kivy.uix.popup import Popup
 
 # Thresholds for detecting automation
 THRESHOLD = 0.2   # Maximum time between keypresses for automated/scripted input
@@ -11,7 +12,7 @@ curr_count = 0
 flag = 0
 
 # Function to handle keyboard events and detect bot-like behavior
-def on_key_event(e):
+def on_key_event(e,bot_activity_detected):
     global curr_count
     global flag
     current_time = time.time()
@@ -32,17 +33,13 @@ def on_key_event(e):
         # Keep only the last few timings
         if len(key_press_times) >= BUFFER_SIZE:
             if curr_count >= 90 and flag >= 100:
-                print("Bot detected!")
+                bot_activity_detected[0]=True
                 flag = 0
             if key_press_times[0] < THRESHOLD:
                 curr_count -= 1
             key_press_times.pop(0)
 
 # Function to start monitoring the keyboard
-def monitor_keyboard():
-    keyboard.hook(on_key_event)
-    print("Monitoring keyboard input... Press ESC to exit.")
+def monitor_keyboard(bot_activity_detected):
+    keyboard.on_press(lambda event: on_key_event(event, bot_activity_detected))
     keyboard.wait('esc')
-
-if __name__ == "__main__":
-    monitor_keyboard()

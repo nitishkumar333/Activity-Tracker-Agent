@@ -14,16 +14,13 @@ def print_time_in_IST(local_tz):
     ist_time = local_time.astimezone(IST)
     print("Current time in IST:", ist_time.strftime('%Y-%m-%d %H:%M:%S'))
 
-def detect_time_zone_change():
-    print("Listening for time zone changes...")
+def detect_time_zone_change(stop):
     # Get the initial system time zone
     previous_tz = get_localzone()  # Convert to string for easier comparison
-    print(previous_tz)
-    while True:
+    while not stop[0]:
         reload_localzone()
         # Get the current system time zone afresh
         current_tz = get_localzone()  # Convert to string for easier comparison
-        print(current_tz)
         # Check if the time zone has changed
         if current_tz != previous_tz:
             print("\nTime zone change detected!")
@@ -34,6 +31,3 @@ def detect_time_zone_change():
 
         # Sleep for a while before checking again (e.g., 10 seconds)
         time.sleep(10)
-
-if __name__ == "__main__":
-    detect_time_zone_change()

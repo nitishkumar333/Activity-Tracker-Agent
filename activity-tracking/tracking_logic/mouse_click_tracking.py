@@ -8,8 +8,9 @@ last_position = None
 CLICK_LIMIT = 10
 
 # Function to detect clicks and detect bots
-def detect_clicks():
-    print("Click detection started.....\n")
+def detect_clicks(bot_activity_detected):
+    print("Click detection Go!..")
+    
     global click_count, last_position
 
     # Function to handle mouse clicks
@@ -33,7 +34,7 @@ def detect_clicks():
 
             # Check if the click count exceeds the limit
             if click_count > CLICK_LIMIT:
-                print("Bot detected !")
+                bot_activity_detected[0] = True
                 # Reset click count after detection
                 click_count = 0
 
@@ -47,5 +48,3 @@ def detect_clicks():
     with mouse.Listener(on_click=on_click, on_move=on_move) as listener:
         listener.join()
 
-if __name__ == "__main__":
-    detect_clicks()

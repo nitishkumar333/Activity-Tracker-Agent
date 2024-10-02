@@ -74,8 +74,8 @@ def get_mouse_position():
     return pt.x, pt.y
 
 # Function to track mouse movements and detect bot/human behavior
-def track_mouse_movement():
-    print("Started mouse detection.....\n")
+def track_mouse_movement(bot_activity_detected):
+    print("mouse Motion  detection Go!.....\n")
     mouse_data = []
     start_time = time.time()
     
@@ -87,10 +87,8 @@ def track_mouse_movement():
 
         if len(mouse_data) > 500:
             result = detect_bot_or_human(mouse_data)
-            print("Is bot -------->>:", result)
+            if result:
+                bot_activity_detected[0]=True 
             mouse_data.clear()
         
         time.sleep(0.02)
-
-if __name__ == "__main__":
-    track_mouse_movement()
