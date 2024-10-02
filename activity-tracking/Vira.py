@@ -11,14 +11,16 @@ from kivy.uix.checkbox import CheckBox
 from plyer import notification
 from system_info import get_system_info
 from tracking_logic.final import Final_Tracker
-
-import pyautogui
-import threading
-import time
-import os
+from dotenv import load_dotenv
+import pyautogui, threading, time, os
 from PIL import Image, ImageFilter
 
+load_dotenv() # load environment variables
 
+aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
+aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
+region_name = os.getenv('AWS_REGION')
+bucket_name = os.getenv('BUCKET_NAME')
 
 class HomeScreen(Screen):
     timer_text = StringProperty("00:00:00")  
@@ -144,7 +146,6 @@ class ConfigScreen(Screen):
                 ss = ss.filter(ImageFilter.GaussianBlur(radius=5))
 
             try:
-                ss.save(path)
                 print(f"Screenshot saved: {path}")
                 count += 1
             except Exception as e:
