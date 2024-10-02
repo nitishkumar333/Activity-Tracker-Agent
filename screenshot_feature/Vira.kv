@@ -1,0 +1,376 @@
+<ViraMain>:
+    id: ViraMain
+    orientation: 'vertical'
+
+    # Video and Details Section at the top
+    BoxLayout:
+        id: Top
+        orientation: 'horizontal'
+        size_hint_y: 0.3
+        padding: [0, 0]  # Remove padding
+        spacing: 0  # Remove spacing between boxes
+
+        # Details Section
+        BoxLayout:
+            size_hint_x: 0.75  # 75% of the width for details
+            orientation: 'horizontal'
+            canvas.before:
+                Color:
+                    rgba: 0.9, 0.9, 0.9, 1  # Light grey background for details
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+
+            # Logo Section (30% width)
+            BoxLayout:
+                size_hint_x: 0.3  # 30% of the details box
+                padding: [10, 10, 0, 10]  # Add gap (left, top, right, bottom)
+                orientation: 'vertical'
+
+                FloatLayout:
+                    # Center the image in this FloatLayout
+                    Image:
+                        id: Logo
+                        source: 'Images/Vira3.png'
+                        size_hint: None, None  # Size not fixed; will set size below
+                        size: self.parent.width * 0.6, self.parent.width * 0.6  # Maintain aspect ratio
+                        pos_hint: {'center_x': 0.5, 'center_y': 0.5}  # Center horizontally and vertically
+                        allow_stretch: True
+                        keep_ratio: True
+
+            # Info Section (70% width)
+            BoxLayout:
+                size_hint_x: 0.7  # 70% of the details box
+                orientation: 'vertical'
+                padding: [10, 10, 10, 10]  # Add padding
+
+                Label:
+                    text: 'Details Section'
+                    font_size: 24
+                    halign: 'center'
+                    valign: 'middle'
+                    text_size: self.size
+
+        # Dynamic width for video section (25% of the total width)
+        BoxLayout:
+            id: VideoBox
+            size_hint_x: 0.25
+            orientation: 'vertical'
+            canvas.before:
+                Color:
+                    rgba: 0.8, 0.8, 0.8, 1  # Slightly darker background for video
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+
+    # Box to hold the horizontal line
+    Widget:
+        size_hint_y: None
+        height: '2dp'  # Height of the line
+        canvas:
+            Color:
+                rgba: 0, 0, 0, 1  # Black color for the line
+            Rectangle:
+                pos: self.pos
+                size: self.size
+
+    # Main content area (Side nav and main screen below)
+    BoxLayout:
+        orientation: 'horizontal'
+        padding: [0, 0]  # Remove padding
+        spacing: 0  # Remove spacing between sidebar and main content
+
+        # Side navigation panel
+        BoxLayout:
+            id: sidebar
+            orientation: 'vertical'
+            size_hint_x: 0.3 
+            canvas.before:
+                Color:
+                    rgba: 0.9, 0.9, 0.9, 1  
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+
+            # Buttons at the top of the side nav
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint_y: None
+                height: '105dp'  # Fixed height for buttons section
+                spacing: 3  # Spacing between buttons
+
+                # Reusable button style
+                StyledButton:
+                    text: 'Home'
+                    on_press: app.root.ids.screen_manager.current = 'home'
+
+                StyledButton:
+                    text: 'Config'
+                    on_press: app.root.ids.screen_manager.current = 'config'
+
+                StyledButton:
+                    text: 'About'
+                    on_press: app.root.ids.screen_manager.current = 'about'
+
+            # Fill the remaining space below the buttons
+            Widget:
+                size_hint_y: 1  # Fills the remaining space but does not contribute to height
+
+        # Main content with ScreenManager
+        ScreenManager:
+            id: screen_manager
+
+            HomeScreen:
+                name: 'home'
+
+            ConfigScreen:
+                name: 'config'
+
+            AboutScreen:
+                name: 'about'
+
+<ScreenManager>:
+    size_hint_y: None
+    height: self.parent.height
+
+<HomeScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        canvas.before:
+            Color:
+                rgba: 1, 1, 1, 1  # White background
+            Rectangle:
+                pos: self.pos
+                size: self.size
+
+        # Warning Label
+        Label:
+            text: "Warning: Your activities will be monitored and no automated inputs are allowed. Strict actions will be taken for malicious activity."
+            halign: 'center'
+            valign: 'middle'
+            color: (1, 0.4, 0.4, 1)  # Light red color
+            font_size: 18
+            size_hint_y: None
+            height: self.texture_size[1] + dp(20)
+            padding: dp(10)
+            text_size: self.width, None
+
+        # Timer Label
+        Label:
+            id: timer_label  # Give ID to access from Python
+            text: root.timer_text  # Bind timer text here
+            font_size: 48
+            color: 0, 0, 0, 1  # Black text
+            halign: 'center'
+            valign: 'middle'
+            text_size: self.size
+
+        # Space between the timer and buttons
+        Widget:
+            size_hint_y: None
+            height: self.parent.height * 0.05
+
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: None
+            height: '50dp'
+            spacing: 0
+
+            # Equal spacing from left of the start button
+            Widget:
+                size_hint_x: 1
+                width: self.parent.width * 0.1
+
+            Button:
+                text: 'Start'
+                size_hint_x: None
+                width: dp(100)  # Fixed width for button
+                background_color: (0.0, 1.0, 0.0, 1)  # Green color
+                color: (1, 1, 1, 1)  # White text color
+                on_press: root.start_timer()  # Start timer method
+                canvas.before:
+                    Color:
+                        rgba: 0.0, 1.0, 0.0, 1
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [30, 30, 30, 30]
+
+            # Widget for spacing between buttons
+            Widget:
+                size_hint_x: None
+                width: self.parent.width * 0.05
+
+            Button:
+                text: 'Stop'
+                size_hint_x: None
+                width: dp(100)  # Fixed width for button
+                background_color: (1.0, 0.0, 0.0, 1)
+                color: (1, 1, 1, 1)
+                on_press: root.stop_timer()  # Stop timer method
+                canvas.before:
+                    Color:
+                        rgba: 1.0, 0.0, 0.0, 1
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [30, 30, 30, 30]
+
+            # Equal spacing from right of the stop button
+            Widget:
+                size_hint_x: 1
+                width: self.parent.width * 0.1
+
+        Widget:
+            size_hint_y: None
+            height: self.parent.height * 0.4
+
+<ConfigScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        padding: dp(20)
+        spacing: dp(10)
+        canvas.before:
+            Color:
+                rgba: 255, 20, 1, 1  # White background for config screen
+            Rectangle:
+                pos: self.pos
+                size: self.size
+
+        # Save Directory Input
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: None
+            height: dp(40)
+            spacing: dp(10)
+
+            Label:
+                text: "Save Directory:"
+                size_hint_x: 0.3
+                halign: 'right'
+                valign: 'middle'
+                text_size: self.size
+                color: 0, 0, 0, 1  # Set text color to black
+
+            TextInput:
+                id: directory_input
+                text: ""
+                multiline: False
+                size_hint_x: 0.7
+
+        # Interval Input
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: None
+            height: dp(40)
+            spacing: dp(10)
+
+            Label:
+                text: "Interval (seconds):"
+                size_hint_x: 0.3
+                halign: 'right'
+                valign: 'middle'
+                text_size: self.size
+                color: 0, 0, 0, 1  # Set text color to black
+
+            TextInput:
+                id: interval_input
+                text: "30"
+                multiline: False
+                input_filter: 'int'
+                size_hint_x: 0.7
+
+        # Blur Checkbox
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: None
+            height: dp(40)
+            spacing: dp(10)
+
+            Label:
+                text: "Blur Screenshots:"
+                size_hint_x: 0.3
+                halign: 'right'
+                valign: 'middle'
+                text_size: self.size
+                color: 0, 0, 0, 1  # Set text color to black
+
+            CheckBox:
+                id: blur_checkbox
+                active: False
+                size_hint_x: 0.7
+
+        # Start/Stop Button
+        Button:
+            id: start_stop_button
+            text: "Start"
+            size_hint_y: None
+            height: dp(50)
+            background_color: (0.2, 0.6, 0.8, 1)
+            color: (1, 1, 1, 1)
+            on_press: root.toggle_screenshots()
+
+        # Status Label
+        Label:
+            id: status_label
+            text: "Ready to start"
+            size_hint_y: None
+            height: dp(30)
+            color: 0, 0, 0, 1  # Set text color to black
+            halign: 'center'
+            valign: 'middle'
+            text_size: self.width, None
+
+<AboutScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        padding: dp(10)  # Padding around the entire layout
+        canvas.before:
+            Color:
+                rgba: 1, 1, 1, 1  # White background
+            Rectangle:
+                pos: self.pos
+                size: self.size
+
+            # Adding the Confidential Image with 50% opacity
+            Color:
+                rgba: 1, 1, 1, 0.4  # Set opacity to 50%
+            Rectangle:
+                source: 'Images/Confidential.png'
+                pos: self.pos
+                size: self.size
+
+        Label:
+            text: "This project is created by Abhishek Dixit, Ayush Sharma, Nimisha Kulshrestha, and Nitish Kumar for Hackathon Test || Vinove Software & Services Pvt. Ltd."
+            halign: 'center'
+            valign: 'middle'
+            color: (0, 0, 0, 1)
+            size_hint_y: None
+            height: self.texture_size[1] + dp(20)  # Adjust height based on text size
+            padding: dp(10)  # Padding inside the label for better readability
+            text_size: self.width, None  # Set text size width to the label's width for centering
+
+        Label:
+            text: "Technologies used: Kivy, PyInput, PyAutoGUI"
+            halign: 'center'
+            valign: 'middle'
+            color: (0, 0, 0, 1)
+            size_hint_y: None
+            height: self.texture_size[1] + dp(20)  # Adjust height based on text size
+            padding: dp(10)  # Padding inside the label for better readability
+            text_size: self.width, None  # Set text size width to the label's width for centering
+
+# Reusable button style for the sidebar
+<StyledButton@Button>:
+    size_hint_y: None
+    height: 40  # Reduced height for buttons
+    background_color: (0.2, 0.6, 0.8, 1)  # Custom background color
+    color: (1, 1, 1, 1)  # White text color
+    font_size: 20  
+    canvas.before:
+        Color:
+            rgba: 0.2, 0.6, 0.8, 1 
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [20, 20, 20, 20]
