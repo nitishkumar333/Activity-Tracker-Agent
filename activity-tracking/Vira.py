@@ -34,9 +34,6 @@ class HomeScreen(Screen):
         minutes, seconds = divmod(remainder, 60)
         self.timer_text = f"{hours:02}:{minutes:02}:{seconds:02}"  
 
-
-        
-
 class ConfigScreen(Screen):
     pass
 
@@ -57,11 +54,9 @@ class ViraMain(BoxLayout):
             self.ids.sidebar.size_hint_x  = 0.3
             self.ids.VideoBox.size_hint_x  = 0.2
         elif width < 550:
-            self.ids.VideoBox.size_hint_x  = 0.5
             self.ids.Logo.size  = self.parent.width * 0.3, self.parent.width * 0.3
         else:
             self.ids.sidebar.size_hint_x = 0.5
-            self.ids.VideoBox.size_hint_x  = 0.4
 
 class ViraApp(App):
     def build(self):
