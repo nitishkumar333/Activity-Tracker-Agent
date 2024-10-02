@@ -1,9 +1,7 @@
 import math
 import time
 from pynput import mouse
-# from data import mouse_movement_data
-# from data_bot import bot_movement_data
-# from temp_data import temp_movement_data
+import ctypes
 
 # Longest common subarray algorithm to detect patterns
 def findLength(nums1, nums2):
@@ -66,18 +64,28 @@ def detect_bot_or_human(mouse_data):
 
     return is_bot
 
-mouse_movements = []
+class POINT(ctypes.Structure):
+    _fields_ = [("x", ctypes.c_long), ("y", ctypes.c_long)]
 
-def on_move(x, y):
-    mouse_movements.append((x, y))
-    if len(mouse_movements) >= 500:
-        result = detect_bot_or_human(mouse_movements)
-        print("Is bot:", result)
-        mouse_movements.clear()
+def get_mouse_position():
+    pt = POINT()
+    ctypes.windll.user32.GetCursorPos(ctypes.byref(pt))
+    return pt.x, pt.y
 
-listener = mouse.Listener(on_move = on_move)
-listener.start()
-print("Listening started....")
-time.sleep(20)
-listener.stop()
+mouse_data = []
+
+start_time = time.time()
+while time.time() - start_time < 20:  # Run for 30 seconds
+    x, y = get_mouse_position()
+    print(len(mouse_data))
+    temp = (x,y)
+    if not mouse_data:
+        mouse_data.append((x,y))
+    elif mouse_data[-1] != temp:
+        mouse_data.append((x,y))
+    if len(mouse_data) > 500 :
+        result = detect_bot_or_human(mouse_data)
+        print("Is bot :-------->>", result)
+        mouse_data.clear()
+    time.sleep(0.02)
 
