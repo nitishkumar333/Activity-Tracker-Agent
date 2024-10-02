@@ -1,3 +1,23 @@
+<StyledLabel@Label>:
+    size_hint_x: 0.5
+    halign: 'center'
+    valign: 'middle'
+    text_size: self.size
+    font_size: '18sp'
+    color: 0, 0, 0, 1  # Black text color
+
+<BackgroundBox@BoxLayout>:
+    size_hint_x: 0.7
+    orientation: 'vertical'
+    padding: [10, 10, 10, 10]
+    spacing: 10
+    canvas.before:
+        Color:
+            rgba: 0.9, 0.9, 0.9, 1  # Light grey background color
+        Rectangle:
+            pos: self.pos
+            size: self.size
+            
 <ViraMain>:
     id:ViraMain
     orientation: 'vertical'
@@ -39,18 +59,35 @@
                         keep_ratio: True
 
             # Info Section (70% width)
-            BoxLayout:
-                size_hint_x: 0.7  # 70% of the details box
-                orientation: 'vertical'
-                padding: [10, 10, 10, 10]  # Add padding
 
-                Label:
-                    text: 'Details Section'
-                    font_size: 24
-                    halign: 'center'
-                    valign: 'middle'
-                    text_size: self.size
+            # Now, reuse the defined components in your main layout
+            BackgroundBox:
+                # Horizontal layout for Node and MAC Address
+                BoxLayout:
+                    orientation: 'horizontal'
+                    size_hint_y: None
+                    height: '40dp'
+                    spacing: 20
 
+                    StyledLabel:
+                        text: "Node: " + root.system_info['Node']
+
+                    StyledLabel:
+                        text: "MAC Address: " + root.system_info['MAC Address']
+
+                # Horizontal layout for System and Version
+                BoxLayout:
+                    orientation: 'horizontal'
+                    size_hint_y: None
+                    height: '40dp'
+                    spacing: 20
+
+                    StyledLabel:
+                        text: "System: " + root.system_info['System']
+
+                    StyledLabel:
+                        text: "Version: " + root.system_info['Version']
+                        
         # Dynamic width for video section (25% of the total width)
         BoxLayout:
             id: VideoBox

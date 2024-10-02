@@ -4,10 +4,10 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.clock import Clock
-from kivy.properties import StringProperty
+from kivy.properties import StringProperty, DictProperty 
 from kivy.core.window import Window
 from kivy.uix.camera import Camera
-
+from system_info import get_system_info
 
 class HomeScreen(Screen):
     timer_text = StringProperty("00:00:00")  
@@ -44,6 +44,7 @@ class AboutScreen(Screen):
     pass
 
 class ViraMain(BoxLayout):
+    system_info = get_system_info() 
     def __init__(self, **kwargs):
         super(ViraMain, self).__init__(**kwargs)
         Window.set_icon('Images/Viraico.png')
