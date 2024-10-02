@@ -17,7 +17,31 @@ from PIL import Image, ImageFilter
 
 
 class HomeScreen(Screen):
-    timer_text = StringProperty("00:00:00")
+    timer_text = StringProperty("00:00:00")  
+
+    def __init__(self, **kwargs):
+        super(HomeScreen, self).__init__(**kwargs)
+        self.seconds = 0  
+        self.timer_event = None
+
+    def start_timer(self):
+        if not self.timer_event:  # Only start if not already started
+            self.timer_event = Clock.schedule_interval(self.update_timer, 1)
+
+
+    def stop_timer(self):
+        if self.timer_event:
+            self.timer_event.cancel()
+            self.timer_event = None
+        self.seconds = 0  # Reset seconds
+        self.timer_text = "00:00:00"  # Reset timer display
+        
+
+    def update_timer(self, dt):
+        self.seconds += 1
+        hours, remainder = divmod(self.seconds, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        self.timer_text = f"{hours:02}:{minutes:02}:{seconds:02}"  
 
     def __init__(self, **kwargs):
         super(HomeScreen, self).__init__(**kwargs)
