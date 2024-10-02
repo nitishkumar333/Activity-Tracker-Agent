@@ -1,10 +1,30 @@
+<StyledLabel@Label>:
+    size_hint_x: 0.5
+    halign: 'center'
+    valign: 'middle'
+    text_size: self.size
+    font_size: '18sp'
+    color: 0, 0, 0, 1  # Black text color
+
+<BackgroundBox@BoxLayout>:
+    size_hint_x: 0.7
+    orientation: 'vertical'
+    padding: [10, 10, 10, 10]
+    spacing: 10
+    canvas.before:
+        Color:
+            rgba: 0.9, 0.9, 0.9, 1  # Light grey background color
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
 <ViraMain>:
-    id: ViraMain
+    id:ViraMain
     orientation: 'vertical'
 
     # Video and Details Section at the top
     BoxLayout:
-        id: Top
+        id:Top
         orientation: 'horizontal'
         size_hint_y: 0.3
         padding: [0, 0]  # Remove padding
@@ -30,8 +50,8 @@
                 FloatLayout:
                     # Center the image in this FloatLayout
                     Image:
-                        id: Logo
-                        source: 'Images/Vira3.png'
+                        id:Logo
+                        source: 'Images\Vira3.png'
                         size_hint: None, None  # Size not fixed; will set size below
                         size: self.parent.width * 0.6, self.parent.width * 0.6  # Maintain aspect ratio
                         pos_hint: {'center_x': 0.5, 'center_y': 0.5}  # Center horizontally and vertically
@@ -39,18 +59,35 @@
                         keep_ratio: True
 
             # Info Section (70% width)
-            BoxLayout:
-                size_hint_x: 0.7  # 70% of the details box
-                orientation: 'vertical'
-                padding: [10, 10, 10, 10]  # Add padding
 
-                Label:
-                    text: 'Details Section'
-                    font_size: 24
-                    halign: 'center'
-                    valign: 'middle'
-                    text_size: self.size
+            # Now, reuse the defined components in your main layout
+            BackgroundBox:
+                # Horizontal layout for Node and MAC Address
+                BoxLayout:
+                    orientation: 'horizontal'
+                    size_hint_y: None
+                    height: '40dp'
+                    spacing: 20
 
+                    StyledLabel:
+                        text: "Node: " + root.system_info['Node']
+
+                    StyledLabel:
+                        text: "Machine: " + root.system_info['machine']
+
+                # Horizontal layout for System and Version
+                BoxLayout:
+                    orientation: 'horizontal'
+                    size_hint_y: None
+                    height: '40dp'
+                    spacing: 20
+
+                    StyledLabel:
+                        text: "System: " + root.system_info['System']
+
+                    StyledLabel:
+                        text: "Version: " + root.system_info['Version']
+                        
         # Dynamic width for video section (25% of the total width)
         BoxLayout:
             id: VideoBox
@@ -62,6 +99,8 @@
                 Rectangle:
                     pos: self.pos
                     size: self.size
+           
+
 
     # Box to hold the horizontal line
     Widget:
@@ -116,6 +155,8 @@
             Widget:
                 size_hint_y: 1  # Fills the remaining space but does not contribute to height
 
+            # Add the black line on the right side of the sidebar as a separate widget
+
         # Main content with ScreenManager
         ScreenManager:
             id: screen_manager
@@ -130,6 +171,7 @@
                 name: 'about'
 
 <ScreenManager>:
+    
     size_hint_y: None
     height: self.parent.height
 
@@ -175,7 +217,7 @@
             size_hint_y: None
             height: '50dp'
             spacing: 0
-
+            
             # Equal spacing from left of the start button
             Widget:
                 size_hint_x: 1
@@ -224,6 +266,7 @@
         Widget:
             size_hint_y: None
             height: self.parent.height * 0.4
+
 
 <ConfigScreen>:
     BoxLayout:
