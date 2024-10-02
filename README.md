@@ -51,7 +51,7 @@ The **Automatic Screenshot App** is a simple Python GUI application built using 
 
 | **Main Interface**                                   | **Blurred Screenshot Option**                           | **Non-Blurred Screenshot**                            |
 |------------------------------------------------------|---------------------------------------------------------|-------------------------------------------------------|
-| ![Main Interface](screenshot_feature/public/interface.png)    | ![Blurred Screenshot](screenshot_feature/public/screenshot.png) | ![Non-Blurred Screenshot](screenshot_feature/public/screenshotnoblurr.png) |
+| ![Main Interface](readme_assets/screenshot_feature/public/interface.png)    | ![Blurred Screenshot](readme_assets/screenshot_feature/public/screenshot.png) | ![Non-Blurred Screenshot](readme_assets/screenshot_feature/public/screenshotnoblurr.png) |
 
 ---
 
