@@ -3,6 +3,12 @@ import pytz
 from datetime import datetime
 from tzlocal import get_localzone, reload_localzone
 
+def print_time_in_IST(local_tz):
+    local_time = datetime.now(local_tz)
+    IST = pytz.timezone('Asia/Kolkata')
+    ist_time = local_time.astimezone(IST)
+    print("Current time in IST:", ist_time.strftime('%Y-%m-%d %H:%M:%S'))
+
 def detect_time_zone_change():
     previous_tz = get_localzone()
     print(previous_tz)
@@ -12,6 +18,7 @@ def detect_time_zone_change():
         print(current_tz)
         if current_tz != previous_tz:
             print("\nTime zone change detected!")
+            print_time_in_IST(current_tz)
             previous_tz = current_tz
 
         time.sleep(10)
