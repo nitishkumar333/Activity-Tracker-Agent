@@ -8,7 +8,7 @@ from kivy.properties import StringProperty
 from kivy.core.window import Window
 from kivy.uix.textinput import TextInput
 from kivy.uix.checkbox import CheckBox
-from kivy.uix.popup import Popup
+from plyer import notification
 from system_info import get_system_info
 from tracking_logic.final import Final_Tracker
 
@@ -59,7 +59,7 @@ class HomeScreen(Screen):
         self.stop_event.clear()  # Clear the stop event
         self.activity_thread = threading.Thread(target=Final_Tracker, args=(self.bot_activity_detected,self.stop))
         self.activity_Pop_thread = threading.Thread(target=self.monitor_bot_activity)
-        self.activity_thread.daemon = True  
+        self.activity_thread.daemon = True   
         self.activity_Pop_thread.daemon = True  
         self.activity_thread.start()
         self.activity_Pop_thread.start()
@@ -74,14 +74,15 @@ class HomeScreen(Screen):
             if self.bot_activity_detected[0]:
                 Clock.schedule_once(self.show_bot_warning, 0)  # Show warning immediately
                 self.bot_activity_detected[0] = False  # Reset the flag after detection
-            threading.Event().wait(1)
+            threading.Event().wait(5)
     
     def show_bot_warning(self, dt):
-        popup = Popup(title='Warning',
-                      content=Label(text='Bot activity detected!'),
-                      size_hint=(0.6, 0.3))
-        popup.open()
-        Clock.schedule_once(lambda dt: popup.dismiss(), 5)  
+        # Use plyer to show a system notification
+        notification.notify(
+            title='Warning',
+            message='Bot activity detected!',
+            timeout=10  # Duration in seconds the notification will be visible
+        ) 
 
 
 class ConfigScreen(Screen):
