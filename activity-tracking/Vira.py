@@ -76,7 +76,7 @@ class HomeScreen(Screen):
         Clock.schedule_once(lambda dt: popup.dismiss(), 5)  
 
 class ConfigScreen(Screen):
-    pass
+    a=True
 
 class AboutScreen(Screen):
     pass
