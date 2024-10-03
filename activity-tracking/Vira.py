@@ -20,6 +20,7 @@ from dotenv import load_dotenv
 import pyautogui
 import threading
 import time
+from datetime import datetime
 import os, uuid, re
 from PIL import Image, ImageFilter
 import boto3
@@ -47,7 +48,8 @@ bucket_name = os.getenv('BUCKET_NAME')
 
 class HomeScreen(Screen):
     timer_text = StringProperty("00:00:00")  
-
+    global mac_address
+    global s3_client
     def __init__(self, **kwargs):
         super(HomeScreen, self).__init__(**kwargs)
         self.seconds = 0  
@@ -113,11 +115,23 @@ class HomeScreen(Screen):
                 Clock.schedule_once(self.show_Inet_warning, 0)
                 threading.Event().wait(5)
             elif self.bot_activity_detected[0]:
+                self.upload_log_to_s3()
                 Clock.schedule_once(self.show_bot_warning, 0)  # Show warning immediately
                 self.bot_activity_detected[0] = False 
                 threading.Event().wait(5)  
             
             threading.Event().wait(5)  # Wait for 5 seconds
+    
+    def upload_log_to_s3(log_content):
+        current_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        log_content = f"Bot Detected at {current_datetime}"
+        tempuuid = str(uuid.uuid4())[1:15] # random string
+        mac_address = ':'.join(re.findall('..', '%012x' % uuid.getnode()))
+        file_name = f"{mac_address}/bot_detected/{tempuuid}.txt"
+        
+        # Upload the file to S3
+        s3_client.put_object(Bucket=bucket_name, Key=file_name, Body=log_content)
+        print(f"Log uploaded to S3 as {file_name}")
 
     def check_battery_status(self, stop):
         while not stop[0]:
@@ -151,18 +165,12 @@ class HomeScreen(Screen):
 
 
 class ConfigScreen(Screen):
-    mac_address = ':'.join(re.findall('..', '%012x' % uuid.getnode()))
+    global mac_address
+    global s3_client
     def __init__(self, **kwargs):
         super(ConfigScreen, self).__init__(**kwargs)
         self.is_running = False
         self.screenshot_thread = None
-        self.s3_client = boto3.client(
-            's3',
-            aws_access_key_id = aws_access_key_id,
-            aws_secret_access_key = aws_secret_access_key,
-            region_name = region_name
-        )
-        self.bucket_name = bucket_name
 
     def toggle_screenshots(self):
         if self.is_running:
@@ -200,8 +208,8 @@ class ConfigScreen(Screen):
         img_byte_arr.seek(0)
         tempuuid = str(uuid.uuid4())[0:15] # random string
         # Define S3 file path and upload
-        s3_path = f'{self.mac_address}/screenshots/{tempuuid}.png'
-        self.s3_client.upload_fileobj(img_byte_arr, self.bucket_name, s3_path)
+        s3_path = f'{mac_address}/screenshots/{tempuuid}.png'
+        s3_client.upload_fileobj(img_byte_arr, bucket_name, s3_path)
 
     def take_screenshots(self):
         directory = self.ids.directory_input.text.strip() or '.'
