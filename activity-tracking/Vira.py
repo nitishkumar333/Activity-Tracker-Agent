@@ -120,23 +120,43 @@ class HomeScreen(Screen):
     def monitor_bot_activity(self, stop):
         while not stop[0]: 
             Inet = self.check_internet_connection()
-            if not Inet:
-                Clock.schedule_once(self.show_Inet_warning, 0)
-                threading.Event().wait(5)
-            elif self.bot_activity_detected[0]:
+            if self.bot_activity_detected[0]:
+                file_name,log_content,Local_name=self.File_Create()
                 if Inet:
                     try:
-                        self.upload_log_to_s3()
+                        self.upload_log_to_s3(file_name+Local_name,log_content)
                     except Exception as e:
                         print(f"Error upoading to S3: {str(e)}")
+                else:
+                     # Get the current script directory dynamically
+                    script_dir = os.path.dirname(os.path.abspath(__file__))
+                    
+                    # Define the path relative to the script's directory
+                    directory = os.path.join(script_dir, "Queue", "Activity_Log")
+                    try:
+                        if not os.path.exists(directory):
+                            os.makedirs(directory)
+                        
+                        # Create the full file path
+                        file_path = os.path.join(directory, Local_name)
+                        
+                        # Save the log content to the file
+                        with open(file_path, 'w') as file:
+                            file.write(log_content)
+                        
+                        print(f"Log saved locally at {file_path}")
+                    except Exception as e:
+                        print(f"Error saving log locally: {str(e)}")
                 Clock.schedule_once(self.show_bot_warning, 0)  # Show warning immediately
                 self.bot_activity_detected[0] = False 
                 threading.Event().wait(5)  
+            elif not Inet:
+                Clock.schedule_once(self.show_Inet_warning, 0)
+                threading.Event().wait(10)
             
-            threading.Event().wait(5)  # Wait for 5 seconds
+            threading.Event().wait(10)  # Wait for 5 seconds
     
-    def upload_log_to_s3(self):
-        file_name,log_content=self.File_Create()
+    def upload_log_to_s3(self,file_name,log_content):
         # Upload the file to S3
         s3_client.put_object(Bucket=bucket_name, Key=file_name, Body=log_content)
         print(f"Log uploaded to S3 as {file_name}")
@@ -146,8 +166,8 @@ class HomeScreen(Screen):
         log_content = f"Bot Detected at {current_datetime}"
         tempuuid = str(datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f")) 
         mac_address = ':'.join(re.findall('..', '%012x' % uuid.getnode()))
-        file_name = f"{mac_address}/bot_detected/{tempuuid}.txt"
-        return file_name,log_content
+        file_name = f"{mac_address}/bot_detected/"
+        return file_name,log_content,tempuuid+".txt"
 
     def check_battery_status(self, stop):
         while not stop[0]:
@@ -169,7 +189,7 @@ class HomeScreen(Screen):
         notification.notify(
             title='Warning',
             message='No Internet Connection Found! Please Connect soon!',
-            timeout=10  )# Duration in seconds the notification will be visible
+            timeout=5  )# Duration in seconds the notification will be visible
 
     def check_internet_connection(self):
         try:
