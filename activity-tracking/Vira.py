@@ -39,7 +39,7 @@ def run_in_thread(script_name):
     check_thread.daemon = True  # Daemon threads automatically close when the program exits
     check_thread.start()
 
-load_dotenv() # load environment variables
+load_dotenv() 
 
 aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
 aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
