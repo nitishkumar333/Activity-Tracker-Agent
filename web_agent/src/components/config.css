@@ -1,0 +1,72 @@
+.Config .heading{
+  margin-bottom: 20px;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.form-group {
+  margin-bottom: 15px;
+  text-align: left;
+  display: flex;
+  justify-content: space-between;
+}
+
+.form-group-num {
+  /* margin-top: 15px; */
+  text-align: left;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.form-group-num input[type="number"] {
+  width: 95%;
+  padding: 8px;
+  font-size: 14px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+.form-group input[type="checkbox"] {
+  /* transform: scale(1.5); */
+  width: 20%;
+}
+
+.Config button {
+  width: 100%;
+  padding: 10px 20px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.Config .btns{
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.Config .btn1{
+  font-weight: bold;
+}
+
+.Config .logoutBtn{
+  font-weight: bold;
+  background-color: #ba2f2f;
+}
+
+.Config .btn1:hover {
+  background-color: #13842b;
+}
+
+.Config .logoutBtn:hover {
+  background-color: #9a1717;
+}

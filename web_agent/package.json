@@ -9,9 +9,12 @@
     "ajv": "^8.17.1",
     "ajv-keywords": "^5.1.0",
     "aws-sdk": "^2.1691.0",
+    "firebase": "^10.14.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-router-dom": "^6.26.2",
     "react-scripts": "5.0.1",
+    "react-toastify": "^10.0.5",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
