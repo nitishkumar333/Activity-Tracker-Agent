@@ -8,9 +8,14 @@ from kivy.properties import StringProperty
 from kivy.core.window import Window
 from kivy.uix.textinput import TextInput
 from kivy.uix.checkbox import CheckBox
+from tracking_logic.final import Final_Tracker
+
 from plyer import notification
 from system_info import get_system_info
-from tracking_logic.final import Final_Tracker
+import requests
+import psutil
+import sys
+
 from dotenv import load_dotenv
 import pyautogui
 import threading
@@ -19,6 +24,19 @@ import os, uuid, re
 from PIL import Image, ImageFilter
 import boto3
 from io import BytesIO
+
+def check_if_already_running(script_name):
+    current_pid = os.getpid()
+    for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+        cmdline = proc.info['cmdline']
+        if cmdline and script_name in cmdline and proc.info['pid'] != current_pid:
+            print(f"Another instance of {script_name} is already running.")
+            sys.exit()
+
+def run_in_thread(script_name):
+    check_thread = threading.Thread(target=check_if_already_running, args=(script_name,))
+    check_thread.daemon = True  # Daemon threads automatically close when the program exits
+    check_thread.start()
 
 load_dotenv() # load environment variables
 
@@ -65,7 +83,7 @@ class HomeScreen(Screen):
     def start_thread(self):
         self.stop_event.clear()  # Clear the stop event
         self.activity_thread = threading.Thread(target=Final_Tracker, args=(self.bot_activity_detected,self.stop))
-        self.activity_Pop_thread = threading.Thread(target=self.monitor_bot_activity)
+        self.activity_Pop_thread = threading.Thread(target=self.monitor_bot_activity, args=(self.stop,))
         self.activity_thread.daemon = True   
         self.activity_Pop_thread.daemon = True  
         self.activity_thread.start()
@@ -76,20 +94,38 @@ class HomeScreen(Screen):
         if self.activity_thread is not None:
             self.activity_thread.join()
 
-    def monitor_bot_activity(self):
-        while not self.stop_event.is_set():  
-            if self.bot_activity_detected[0]:
+    def monitor_bot_activity(self,stop):
+        while not stop[0]: 
+            Inet=self.check_internet_connection()
+            if not Inet:
+                Clock.schedule_once(self.show_Inet_warning, 0)
+                threading.Event().wait(5)
+            elif self.bot_activity_detected[0]:
                 Clock.schedule_once(self.show_bot_warning, 0)  # Show warning immediately
-                self.bot_activity_detected[0] = False  # Reset the flag after detection
-            threading.Event().wait(5)
+                self.bot_activity_detected[0] = False 
+                threading.Event().wait(5) # Reset the flag after detection
+            threading.Event().wait(10)
     
     def show_bot_warning(self, dt):
         # Use plyer to show a system notification
         notification.notify(
             title='Warning',
             message='Bot activity detected!',
-            timeout=10  # Duration in seconds the notification will be visible
-        ) 
+            timeout=10 ) 
+    
+    def show_Inet_warning(self, dt):
+        notification.notify(
+            title='Warning',
+            message='No Internet Connection Found! Please Connect soon!',
+            timeout=10  )# Duration in seconds the notification will be visible
+
+    def check_internet_connection(self):
+        try:
+            requests.get("https://www.google.com", timeout=5)
+            return True
+        except requests.ConnectionError:
+            return False
+        
 
 
 class ConfigScreen(Screen):
@@ -217,4 +253,5 @@ class ViraApp(App):
 
 
 if __name__ == '__main__':
+    run_in_thread('Vira.py')
     ViraApp().run()
