@@ -41,9 +41,7 @@ def run_in_thread(script_name):
 
 load_dotenv() 
 
-#details
-
-aws_access_key_id = os.getenv('AWS_ACCES_KEY_ID')
+aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
 aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
 region_name = os.getenv('AWS_REGION')
 bucket_name = os.getenv('BUCKET_NAME')
@@ -141,7 +139,7 @@ class HomeScreen(Screen):
 
         if self.screenshot_thread and self.screenshot_thread.is_alive():
             self.is_running = False  # This stops the screenshot loop
-            self.screenshot_thread.join()  # Ensure thread has finished
+            self.screenshot_thread.join(timeout=0) # Ensure thread has finished
             self.screenshot_thread = None
 
 
@@ -277,7 +275,6 @@ class HomeScreen(Screen):
         try:
             interval = int(self.agent_data.interval)
         except ValueError:
-            Clock.schedule_once(lambda dt: self.update_status("Invalid interval"))
             return
 
         count = 1
@@ -297,16 +294,10 @@ class HomeScreen(Screen):
                     print(f"Screenshot saved")
                     count += 1
                 except Exception as e:
-                    Clock.schedule_once(lambda dt: self.update_status(f"Error saving screenshot: {str(e)}"))
                     break
 
             time.sleep(interval)
 
-        if not self.is_running:
-            Clock.schedule_once(lambda dt: self.update_status("Screenshot capture stopped"))
-
-    def update_status(self, message):
-        self.ids.status_label.text = message
 
 
 
