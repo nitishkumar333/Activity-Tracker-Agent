@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Logs
+*.log
+*.log.*
+
+# Environment variables
+.env
+.env.local
+.env.*.local
