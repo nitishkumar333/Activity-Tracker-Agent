@@ -15,11 +15,11 @@ from system_info import get_system_info
 import requests
 import psutil
 import sys
-
+from collections import namedtuple
 from dotenv import load_dotenv
 import pyautogui
 import threading
-import time
+import time, json
 from datetime import datetime
 import os, uuid, re
 from PIL import Image, ImageFilter
@@ -53,6 +53,16 @@ s3_client = boto3.client(
     region_name = region_name
 )
 mac_address = ':'.join(re.findall('..', '%012x' % uuid.getnode()))
+
+class AgentConfig:
+    global s3_client
+    def fetch_data():
+        response = s3_client.get_object(Bucket=bucket_name, Key='python_agent_data.json')
+        file_content = response['Body'].read().decode('utf-8')
+
+        # Convert JSON to Python dictionary
+        data = json.loads(file_content, object_hook = lambda d : namedtuple('X', d.keys())(*d.values()))
+        return data
 
 class HomeScreen(Screen):
     timer_text = StringProperty("00:00:00")  
@@ -207,6 +217,10 @@ class ConfigScreen(Screen):
         super(ConfigScreen, self).__init__(**kwargs)
         self.is_running = False
         self.screenshot_thread = None
+        self.agent_data = AgentConfig.fetch_data()
+        # self.agent_data.interval -> str
+        # self.agent_data.blur -> bool
+        # self.agent_data.screenshot -> bool
 
     def toggle_screenshots(self):
         if self.is_running:
@@ -216,16 +230,19 @@ class ConfigScreen(Screen):
 
     def start_screenshots(self):
         try:
-            interval_text = self.ids.interval_input.text
-            interval = float(interval_text)
-            if interval <= 0:
-                raise ValueError("Interval must be a positive number")
+            interval = int(self.agent_data.interval)
+            if interval and interval < 10:
+                raise ValueError("Interval must be greater than 10")
 
             self.is_running = True
+            if self.agent_data.screenshot and self.agent_data.screenshot == True:
+                self.screenshot_thread = threading.Thread(target=self.take_screenshots, daemon=True)
+                self.screenshot_thread.start()
+            else:
+                Clock.schedule_once(lambda dt: self.update_status("Feature not enabled"))
+                return
             self.ids.start_stop_button.text = 'Stop'
-            self.screenshot_thread = threading.Thread(target=self.take_screenshots, daemon=True)
-            self.screenshot_thread.start()
-            blur_status = "blurred" if self.ids.blur_checkbox.active else "normal"
+            blur_status = "blurred" if self.agent_data.blur and self.agent_data.blur == True else "normal"
             self.ids.status_label.text = f"Taking {blur_status} screenshots every {interval} seconds"
         except ValueError as e:
             self.ids.status_label.text = f"Error: {str(e)}"
@@ -248,26 +265,27 @@ class ConfigScreen(Screen):
         s3_client.upload_fileobj(img_byte_arr, bucket_name, s3_path)
 
     def take_screenshots(self):
-        directory = self.ids.directory_input.text.strip() or '.'
-        if not os.path.exists(directory):
-            try:
-                os.makedirs(directory)
-            except Exception as e:
-                Clock.schedule_once(lambda dt: self.update_status(f"Error creating directory: {str(e)}"))
-                return
+        # this code is for creating location while saving in system
+        # directory = self.ids.directory_input.text.strip() or '.'
+        # if not os.path.exists(directory):
+        #     try:
+        #         os.makedirs(directory)
+        #     except Exception as e:
+        #         Clock.schedule_once(lambda dt: self.update_status(f"Error creating directory: {str(e)}"))
+        #         return
 
         try:
-            interval = float(self.ids.interval_input.text)
+            interval = int(self.agent_data.interval)
         except ValueError:
             Clock.schedule_once(lambda dt: self.update_status("Invalid interval"))
             return
 
         count = 1
         while self.is_running:
-            path = os.path.join(directory, f'screenshot_{count}.png')
+            # path = os.path.join(directory, f'screenshot_{count}.png')
             ss = pyautogui.screenshot()
 
-            if self.ids.blur_checkbox.active:
+            if self.agent_data.blur and self.agent_data.blur == True:
                 ss = ss.filter(ImageFilter.GaussianBlur(radius=5))
 
             Inet = self.check_internet_connection()
@@ -277,7 +295,7 @@ class ConfigScreen(Screen):
             else:
                 try:
                     self.upload_to_s3(ss)
-                    print(f"Screenshot saved: {path}")
+                    print(f"Screenshot saved")
                     count += 1
                 except Exception as e:
                     Clock.schedule_once(lambda dt: self.update_status(f"Error saving screenshot: {str(e)}"))
