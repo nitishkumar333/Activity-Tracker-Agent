@@ -245,13 +245,18 @@ class ConfigScreen(Screen):
             if self.ids.blur_checkbox.active:
                 ss = ss.filter(ImageFilter.GaussianBlur(radius=5))
 
-            try:
-                self.upload_to_s3(ss)
-                print(f"Screenshot saved: {path}")
-                count += 1
-            except Exception as e:
-                Clock.schedule_once(lambda dt: self.update_status(f"Error saving screenshot: {str(e)}"))
-                break
+            Inet = self.check_internet_connection()
+            if not Inet:
+                Clock.schedule_once(self.show_Inet_warning, 0)
+                threading.Event().wait(5)
+            else:
+                try:
+                    self.upload_to_s3(ss)
+                    print(f"Screenshot saved: {path}")
+                    count += 1
+                except Exception as e:
+                    Clock.schedule_once(lambda dt: self.update_status(f"Error saving screenshot: {str(e)}"))
+                    break
 
             time.sleep(interval)
 
@@ -261,6 +266,19 @@ class ConfigScreen(Screen):
 
     def update_status(self, message):
         self.ids.status_label.text = message
+
+    def show_Inet_warning(self, dt):
+        notification.notify(
+            title='Warning',
+            message='No Internet Connection Found! Please Connect soon!',
+            timeout=10  )# Duration in seconds the notification will be visible
+
+    def check_internet_connection(self):
+        try:
+            requests.get("https://www.google.com", timeout=5)
+            return True
+        except requests.ConnectionError:
+            return False
 
 
 class AboutScreen(Screen):
