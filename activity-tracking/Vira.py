@@ -169,22 +169,22 @@ class HomeScreen(Screen):
                     directory = os.path.join(script_dir, "Queue", "Activity_Log")
                     if os.path.exists(directory):
                         files = os.listdir(directory)
-                        for file_name in files:
-                            file_path = os.path.join(directory, file_name)
+                        for Local in files:
+                            file_path = os.path.join(directory, Local)
                             if os.path.isfile(file_path):
                                 try:
                                     with open(file_path, 'r') as file:
                                         log_content = file.read()
                                     
                                     # Upload the file to S3
-                                    self.upload_log_to_s3(file_name, log_content)
-                                    print(f"Uploaded {file_name} to S3.")
+                                    self.upload_log_to_s3(file_name+Local, log_content)
+                                    print(f"Uploaded {file_name+Local} to S3.")
                                     
                                     # Delete the file after successful upload
                                     os.remove(file_path)
-                                    print(f"Deleted local log file: {file_name}")
+                                    print(f"Deleted local log file: {Local}")
                                 except Exception as e:
-                                    print(f"Error uploading {file_name} to S3: {str(e)}")
+                                    print(f"Error uploading {Local} to S3: {str(e)}")
                 except Exception as e:
                     print(f"Error checking local logs for upload: {str(e)}")
     
