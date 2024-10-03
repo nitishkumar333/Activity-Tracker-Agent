@@ -4,7 +4,7 @@ from tracking_logic import mouse_click_tracking
 from tracking_logic import keyboard_tracking
 from tracking_logic import timezone_tracking
 
-def Final_Tracker(bot_activity_detected,stop):
+def Final_Tracker(bot_activity_detected,stop,percentage,is_plugged):
     # Start thread for tracking mouse movement
     movement_thread = threading.Thread(target=mouse_tracking.track_mouse_movement, args=(bot_activity_detected,))
     movement_thread.start()
@@ -20,3 +20,12 @@ def Final_Tracker(bot_activity_detected,stop):
     # Detect mouse clicks in its own thread
     click_thread = threading.Thread(target=mouse_click_tracking.detect_clicks, args=(bot_activity_detected,))
     click_thread.start()
+
+    while not stop[0]:
+        if percentage < 25 and not is_plugged[0]:
+            movement_thread.clear()  
+            click_thread.clear() 
+        else:
+            movement_thread.set() 
+            click_thread.set()
+        threading.Event().wait(600)

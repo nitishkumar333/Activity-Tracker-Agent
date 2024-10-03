@@ -56,7 +56,11 @@ class HomeScreen(Screen):
         self.stop=[True]
         self.stop_event = threading.Event() 
         self.activity_thread = None
+        self.activity_Pop_thread = None
+        self.battery_thread = None
         self.stop_thread()
+        self.percentage = 100
+        self.is_plugged = [True]
 
     def start_timer(self):
         if not self.timer_event:  
@@ -81,31 +85,49 @@ class HomeScreen(Screen):
 
     
     def start_thread(self):
-        self.stop_event.clear()  # Clear the stop event
-        self.activity_thread = threading.Thread(target=Final_Tracker, args=(self.bot_activity_detected,self.stop))
-        self.activity_Pop_thread = threading.Thread(target=self.monitor_bot_activity, args=(self.stop,))
-        self.activity_thread.daemon = True   
-        self.activity_Pop_thread.daemon = True  
+        self.stop_event.clear()  
+        self.activity_thread = threading.Thread(target=Final_Tracker, args=(self.bot_activity_detected,self.stop,self.percentage,self.is_plugged), daemon=True)
+        self.activity_Pop_thread = threading.Thread(target=self.monitor_bot_activity, args=(self.stop,), daemon=True)
+        self.battery_thread = threading.Thread(target=self.check_battery_status, daemon=True)
+        self.battery_thread.start()
         self.activity_thread.start()
         self.activity_Pop_thread.start()
 
     def stop_thread(self):
-        self.stop_event.set()  # Set the event to signal the thread to stop 
+        self.stop_event.set()
         if self.activity_thread is not None:
             self.activity_thread.join()
+            self.activity_thread = None  # Clear reference after stopping
+        
+        if self.activity_Pop_thread is not None:
+            self.activity_Pop_thread = None  # Clear reference after stopping
+        
+        if self.battery_thread is not None:
+            self.battery_thread = None  # Clear reference after stopping
 
-    def monitor_bot_activity(self,stop):
+
+    def monitor_bot_activity(self, stop):
         while not stop[0]: 
-            Inet=self.check_internet_connection()
+            Inet = self.check_internet_connection()
             if not Inet:
                 Clock.schedule_once(self.show_Inet_warning, 0)
                 threading.Event().wait(5)
             elif self.bot_activity_detected[0]:
                 Clock.schedule_once(self.show_bot_warning, 0)  # Show warning immediately
                 self.bot_activity_detected[0] = False 
-                threading.Event().wait(5) # Reset the flag after detection
-            threading.Event().wait(10)
-    
+                threading.Event().wait(5)  
+            
+            threading.Event().wait(5)  # Wait for 5 seconds
+
+    def check_battery_status(self, stop):
+        while not stop[0]:
+            battery = psutil.sensors_battery()  # Get battery status
+            if battery is not None:
+                self.percentage = battery.percent
+                self.is_plugged = [battery.power_plugged]
+            threading.Event().wait(600)  
+            
+
     def show_bot_warning(self, dt):
         # Use plyer to show a system notification
         notification.notify(
