@@ -123,7 +123,10 @@ class HomeScreen(Screen):
                 Clock.schedule_once(self.show_Inet_warning, 0)
                 threading.Event().wait(5)
             elif self.bot_activity_detected[0]:
-                self.upload_log_to_s3()
+                try:
+                    self.upload_log_to_s3()
+                except Exception as e:
+                    print(f"Error upoading to S3: {str(e)}")
                 Clock.schedule_once(self.show_bot_warning, 0)  # Show warning immediately
                 self.bot_activity_detected[0] = False 
                 threading.Event().wait(5)  
