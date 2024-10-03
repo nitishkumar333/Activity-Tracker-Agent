@@ -96,9 +96,10 @@ class HomeScreen(Screen):
     
     def start_thread(self):
         self.stop_event.clear()  
-        self.activity_thread = threading.Thread(target=Final_Tracker, args=(self.bot_activity_detected,self.stop,self.percentage,self.is_plugged), daemon=True)
+        self.activity_thread = threading.Thread(target=Final_Tracker, args=(self.bot_activity_detected,self.stop,self.percentage,self.is_plugged
+        ), daemon=True)
         self.activity_Pop_thread = threading.Thread(target=self.monitor_bot_activity, args=(self.stop,), daemon=True)
-        self.battery_thread = threading.Thread(target=self.check_battery_status, daemon=True)
+        self.battery_thread = threading.Thread(target=self.check_battery_status, args=(self.stop,), daemon=True)
         self.battery_thread.start()
         self.activity_thread.start()
         self.activity_Pop_thread.start()
@@ -107,13 +108,13 @@ class HomeScreen(Screen):
         self.stop_event.set()
         if self.activity_thread is not None:
             self.activity_thread.join()
-            self.activity_thread = None  # Clear reference after stopping
+            self.activity_thread = None  
         
         if self.activity_Pop_thread is not None:
-            self.activity_Pop_thread = None  # Clear reference after stopping
+            self.activity_Pop_thread = None  
         
         if self.battery_thread is not None:
-            self.battery_thread = None  # Clear reference after stopping
+            self.battery_thread = None  
 
 
     def monitor_bot_activity(self, stop):
