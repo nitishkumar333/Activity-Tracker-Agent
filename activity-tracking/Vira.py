@@ -84,7 +84,10 @@ class HomeScreen(Screen):
         self.percentage = 100
         self.is_plugged = [True]
         self.is_running = False
-        self.agent_data = AgentConfig.fetch_data()
+        # Define the named tuple
+        AgentData = namedtuple('AgentData', ['interval', 'screenshot', 'blur'])
+        self.agent_data = AgentData(interval='600', screenshot=True, blur=True)
+        print(self.agent_data)
 
     def start_timer(self):
         if not self.timer_event:  
@@ -147,66 +150,67 @@ class HomeScreen(Screen):
     def monitor_bot_activity(self, stop):
         while not stop[0]: 
             Inet = self.check_internet_connection()
+
+            # Check for bot activity
             if self.bot_activity_detected[0]:
-                file_name,log_content,Local_name=self.File_Create()
+                file_name, log_content, Local_name = self.File_Create()
                 if Inet:
                     try:
-                        self.upload_log_to_s3(file_name+Local_name,log_content)
+                        self.upload_log_to_s3(file_name + Local_name, log_content)
                     except Exception as e:
-                        print(f"Error upoading to S3: {str(e)}")
+                        print(f"Error uploading to S3: {str(e)}")
                 else:
-                     # Get the current script directory dynamically
+                    # Save log locally if there's no internet
                     script_dir = os.path.dirname(os.path.abspath(__file__))
-                    
-                    # Define the path relative to the script's directory
                     directory = os.path.join(script_dir, "Queue", "Activity_Log")
                     try:
                         if not os.path.exists(directory):
                             os.makedirs(directory)
-                        
+
                         # Create the full file path
                         file_path = os.path.join(directory, Local_name)
-                        
+
                         # Save the log content to the file
                         with open(file_path, 'w') as file:
                             file.write(log_content)
-                        
+
                         print(f"Log saved locally at {file_path}")
                     except Exception as e:
                         print(f"Error saving log locally: {str(e)}")
+
                 Clock.schedule_once(self.show_bot_warning, 0)  # Show warning immediately
                 self.bot_activity_detected[0] = False 
-                threading.Event().wait(5)  
-            elif not Inet:
+                threading.Event().wait(5)  # Wait after logging bot activity
+
+            # Check internet connection and log status
+            if not Inet:
                 Clock.schedule_once(self.show_Inet_warning, 0)
                 threading.Event().wait(10)
             elif Inet:
-                try:
-                    script_dir = os.path.dirname(os.path.abspath(__file__))
-                    directory = os.path.join(script_dir, "Queue", "Activity_Log")
-                    if os.path.exists(directory):
-                        files = os.listdir(directory)
-                        for Local in files:
-                            file_path = os.path.join(directory, Local)
-                            if os.path.isfile(file_path):
-                                try:
-                                    with open(file_path, 'r') as file:
-                                        log_content = file.read()
-                                    
-                                    # Upload the file to S3
-                                    self.upload_log_to_s3(file_name+Local, log_content)
-                                    print(f"Uploaded {file_name+Local} to S3.")
-                                    
-                                    # Delete the file after successful upload
-                                    os.remove(file_path)
-                                    print(f"Deleted local log file: {Local}")
-                                except Exception as e:
-                                    print(f"Error uploading {Local} to S3: {str(e)}")
-                except Exception as e:
-                    print(f"Error checking local logs for upload: {str(e)}")
-    
-                
-            threading.Event().wait(10)  # Wait for 5 seconds
+                # Check for existing logs to upload
+                script_dir = os.path.dirname(os.path.abspath(__file__))
+                directory = os.path.join(script_dir, "Queue", "Activity_Log")
+                if os.path.exists(directory):
+                    files = os.listdir(directory)
+                    for Local in files:
+                        file_path = os.path.join(directory, Local)
+                        if os.path.isfile(file_path):
+                            try:
+                                with open(file_path, 'r') as file:
+                                    log_content = file.read()
+
+                                # Upload the file to S3
+                                self.upload_log_to_s3(file_name + Local, log_content)
+                                print(f"Uploaded {file_name + Local} to S3.")
+
+                                # Delete the file after successful upload
+                                os.remove(file_path)
+                                print(f"Deleted local log file: {Local}")
+                            except Exception as e:
+                                print(f"Error uploading {Local} to S3: {str(e)}")
+
+            threading.Event().wait(10)  # Wait before the next iteration
+
     
     def upload_log_to_s3(self,file_name,log_content):
         # Upload the file to S3
@@ -253,50 +257,99 @@ class HomeScreen(Screen):
 
 
     #ScreenShot Work  
-    def upload_SS_to_s3(self, image):
+    def upload_SS_to_s3(self, image,file_name,Local):
         # Save screenshot to an in-memory file (BytesIO)
         img_byte_arr = BytesIO()
         image.save(img_byte_arr, format='PNG')
-        img_byte_arr.seek(0)
+        img_byte_arr.seek(0) 
+        s3_client.upload_fileobj(img_byte_arr, bucket_name,file_name+Local)
+
+    def File_Create_SS(self):
+        current_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         tempuuid = str(datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f")) 
-        # Define S3 file path and upload
-        s3_path = f'{mac_address}/screenshots/{tempuuid}.png'
-        s3_client.upload_fileobj(img_byte_arr, bucket_name, s3_path)
+        mac_address = ':'.join(re.findall('..', '%012x' % uuid.getnode()))
+        file_name = f"{mac_address}/screenshots/"
+        return file_name,tempuuid+".png"
 
     def take_screenshots(self):
-        # this code is for creating location while saving in system
-        # directory = self.ids.directory_input.text.strip() or '.'
-        # if not os.path.exists(directory):
-        #     try:
-        #         os.makedirs(directory)
-        #     except Exception as e:
-        #         Clock.schedule_once(lambda dt: self.update_status(f"Error creating directory: {str(e)}"))
-        #         return
+        Inet = self.check_internet_connection()
+        if Inet:
+            self.agent_data = AgentConfig.fetch_data()
+        
         try:
             interval = int(self.agent_data.interval)
         except ValueError:
             return
-
-        count = 1
+        
+        count = 0
         while self.is_running:
             ss = pyautogui.screenshot()
 
-            if self.agent_data.blur and self.agent_data.blur == True:
+            # Apply blur if needed
+            if self.agent_data.blur and self.agent_data.blur:
                 ss = ss.filter(ImageFilter.GaussianBlur(radius=5))
 
             Inet = self.check_internet_connection()
+            file_name, Local = self.File_Create_SS()
             if not Inet:
-                Clock.schedule_once(self.show_Inet_warning, 0)
-                threading.Event().wait(5)
-            else:
+                # Save screenshot locally if there's no internet
+                script_dir = os.path.dirname(os.path.abspath(__file__))
+                directory = os.path.join(script_dir, "Queue", "Screen_Shot")
                 try:
-                    self.upload_SS_to_s3(ss)
-                    print(f"Screenshot saved")
-                    count += 1
-                except Exception as e:
-                    break
+                    if not os.path.exists(directory):
+                        os.makedirs(directory)
 
-            time.sleep(interval)
+                    file_path = os.path.join(directory, Local)
+                    ss.save(file_path) 
+                    print(f"Screenshot saved locally at {file_path}")
+                except Exception as e:
+                    print(f"Error saving screenshot locally: {str(e)}")
+            else:
+                # Check if the count matches the interval
+                if count >= interval:
+                    try:
+                        # Upload the screenshot directly to S3
+                        self.upload_SS_to_s3(ss, file_name, Local)
+                        print(f"Screenshot uploaded to S3.")
+                        
+                        # Update agent data from the config
+                        self.agent_data = AgentConfig.fetch_data()
+                    except Exception as e:
+                        print(f"Error uploading screenshot: {str(e)}")
+                        break  # Break the loop or handle the error as needed
+                    # Reset count after uploading
+                    count = 0
+                else:
+                    # Check for existing files to upload
+                    try:
+                        script_dir = os.path.dirname(os.path.abspath(__file__))
+                        directory = os.path.join(script_dir, "Queue", "Screen_Shot")
+                        
+                        if os.path.exists(directory):
+                            files = os.listdir(directory)
+                            for Local in files:
+                                file_path = os.path.join(directory, Local)
+                                if os.path.isfile(file_path):
+                                    try:
+                                        # Check if the file is a screenshot (e.g., ends with .png or .jpg)
+                                        if Local.lower().endswith(('.png', '.jpg', '.jpeg')):
+                                            # Open the image file to upload
+                                            with Image.open(file_path) as image:
+                                                # Upload the screenshot to S3
+                                                self.upload_SS_to_s3(image, file_name, Local)  # Use the correct upload function
+                                                print(f"Uploaded screenshot {Local} to S3.")
+                                                
+                                            # Delete the file after successful upload
+                                            os.remove(file_path)
+                                            print(f"Deleted local screenshot file: {Local}")
+                                    except Exception as e:
+                                        print(f"Error uploading {Local} to S3: {str(e)}")
+                    except Exception as e:
+                        print(f"Error checking local screenshots for upload: {str(e)}")
+
+            # Increment count
+            count += 1
+            time.sleep(100)  # Optional: Add a delay between iterations to control the loop speed
 
 
 
