@@ -6,7 +6,7 @@ The **Activity Tracker Agent** is a Python-based desktop application designed to
 
 | Architecture |
 |:------------:|
-|![Configuration Interface](public/charts.gif)|
+|![Configuration Interface](public/charts_whitebg.gif)|
 
 <!-- ![Configuration Interface](public/charts_whitebg.gif) -->
 
