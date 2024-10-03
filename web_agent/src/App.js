@@ -4,26 +4,29 @@ import "./App.css";
 
 function App() {
   const [formData, setFormData] = useState({
-    interval: 10,
-    screenshot: false,
-    blur: false,
+    interval: 10, // Default interval
+    screenshot: false, // Default screenshot unchecked
+    blur: false, // Default blur unchecked
   });
 
   const getFileFromS3 = async () => {
     const params = {
       Bucket: process.env.REACT_APP_AWS_BUCKET_NAME,
-      Key: "python_agent_data.json",
+      Key: "python_agent_data.json", // The file's name in S3
     };
 
     try {
+      // Fetch the file from S3
       const data = await s3.getObject(params).promise();
+
+      // Convert the JSON file content to a JavaScript object
       const fileContent = JSON.parse(data.Body.toString("utf-8"));
       setFormData({
         interval: fileContent.interval,
         screenshot: fileContent.screenshot,
         blur: fileContent.blur,
       });
-      console.log(fileContent);
+      console.log(fileContent); // The JSON data as a JavaScript object
       return fileContent;
     } catch (error) {
       console.error("Error fetching file from S3:", error);
@@ -34,22 +37,26 @@ function App() {
     getFileFromS3();
   }, []);
 
+  // const s3 = new AWS.S3();
   const BUCKET_NAME = process.env.REACT_APP_AWS_BUCKET_NAME;
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
     if (name === "interval" && value < 10) {
+      // Ensure interval is at least 10
       alert("Interval must be greater than or equal to 10");
       return;
     }
 
+    // Special handling for screenshot checkbox
     if (name === "screenshot" && !checked) {
+      // If screenshot is unchecked, reset interval and blur
       setFormData({
         ...formData,
         screenshot: checked,
-        interval: 10,
-        blur: false,
+        interval: 10, // Reset interval to default value
+        blur: false, // Reset blur
       });
     } else {
       setFormData({
@@ -105,7 +112,7 @@ function App() {
             value={formData.interval}
             onChange={handleChange}
             required
-            disabled={!formData.screenshot}
+            disabled={!formData.screenshot} // Disable if screenshot is not checked
           />
         </div>
 
@@ -116,7 +123,7 @@ function App() {
             name="blur"
             checked={formData.blur}
             onChange={handleChange}
-            disabled={!formData.screenshot}
+            disabled={!formData.screenshot} // Disable if screenshot is not checked
           />
         </div>
 
