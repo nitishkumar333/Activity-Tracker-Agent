@@ -124,26 +124,30 @@ class HomeScreen(Screen):
                 Clock.schedule_once(self.show_Inet_warning, 0)
                 threading.Event().wait(5)
             elif self.bot_activity_detected[0]:
-                try:
-                    self.upload_log_to_s3()
-                except Exception as e:
-                    print(f"Error upoading to S3: {str(e)}")
+                if Inet:
+                    try:
+                        self.upload_log_to_s3()
+                    except Exception as e:
+                        print(f"Error upoading to S3: {str(e)}")
                 Clock.schedule_once(self.show_bot_warning, 0)  # Show warning immediately
                 self.bot_activity_detected[0] = False 
                 threading.Event().wait(5)  
             
             threading.Event().wait(5)  # Wait for 5 seconds
     
-    def upload_log_to_s3(log_content):
-        current_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        log_content = f"Bot Detected at {current_datetime}"
-        tempuuid = str(uuid.uuid4())[1:15] # random string
-        mac_address = ':'.join(re.findall('..', '%012x' % uuid.getnode()))
-        file_name = f"{mac_address}/bot_detected/{tempuuid}.txt"
-        
+    def upload_log_to_s3(self):
+        file_name,log_content=self.File_Create()
         # Upload the file to S3
         s3_client.put_object(Bucket=bucket_name, Key=file_name, Body=log_content)
         print(f"Log uploaded to S3 as {file_name}")
+
+    def File_Create(self):
+        current_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        log_content = f"Bot Detected at {current_datetime}"
+        tempuuid = str(datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f")) 
+        mac_address = ':'.join(re.findall('..', '%012x' % uuid.getnode()))
+        file_name = f"{mac_address}/bot_detected/{tempuuid}.txt"
+        return file_name,log_content
 
     def check_battery_status(self, stop):
         while not stop[0]:
