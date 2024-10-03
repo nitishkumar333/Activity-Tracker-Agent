@@ -23,21 +23,15 @@ function App() {
   });
   return (
     <Router>
-      <div className="App">
-        <div className="auth-wrapper">
-          <div className="auth-inner">
-            <Routes>
-              <Route
-                path="/"
-                element={user ? <Navigate to="/profile" /> : <Login />}
-              />
-              <Route path="/login" element={<Login />} />
-              <Route path="/profile" element={<Profile />} />
-            </Routes>
-            <ToastContainer />
-          </div>
-        </div>
-      </div>
+      <Routes>
+        <Route
+          path="/"
+          element={user ? <Navigate to="/profile" /> : <Login />}
+        />
+        <Route path="/login" element={<Login />} />
+        <Route path="/profile" element={<Profile />} />
+      </Routes>
+      <ToastContainer />
     </Router>
   );
 }
