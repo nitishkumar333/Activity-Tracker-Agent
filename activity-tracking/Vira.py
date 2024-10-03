@@ -39,7 +39,7 @@ def run_in_thread(script_name):
     check_thread.daemon = True  # Daemon threads automatically close when the program exits
     check_thread.start()
 
-load_dotenv() # load environment variables
+load_dotenv() 
 
 aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
 aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
@@ -163,7 +163,32 @@ class HomeScreen(Screen):
             elif not Inet:
                 Clock.schedule_once(self.show_Inet_warning, 0)
                 threading.Event().wait(10)
-            
+            elif Inet:
+                try:
+                    script_dir = os.path.dirname(os.path.abspath(__file__))
+                    directory = os.path.join(script_dir, "Queue", "Activity_Log")
+                    if os.path.exists(directory):
+                        files = os.listdir(directory)
+                        for file_name in files:
+                            file_path = os.path.join(directory, file_name)
+                            if os.path.isfile(file_path):
+                                try:
+                                    with open(file_path, 'r') as file:
+                                        log_content = file.read()
+                                    
+                                    # Upload the file to S3
+                                    self.upload_log_to_s3(file_name, log_content)
+                                    print(f"Uploaded {file_name} to S3.")
+                                    
+                                    # Delete the file after successful upload
+                                    os.remove(file_path)
+                                    print(f"Deleted local log file: {file_name}")
+                                except Exception as e:
+                                    print(f"Error uploading {file_name} to S3: {str(e)}")
+                except Exception as e:
+                    print(f"Error checking local logs for upload: {str(e)}")
+    
+                
             threading.Event().wait(10)  # Wait for 5 seconds
     
     def upload_log_to_s3(self,file_name,log_content):
