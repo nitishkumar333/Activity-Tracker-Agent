@@ -267,102 +267,73 @@
             size_hint_y: None
             height: self.parent.height * 0.4
 
+# config_screen.kv
+
 
 <ConfigScreen>:
     BoxLayout:
-        orientation: 'vertical'
-        padding: dp(20)
-        spacing: dp(10)
+        orientation: 'horizontal'  # Main layout for the screen
         canvas.before:
             Color:
-                rgba: 255, 20, 1, 1  # White background for config screen
+                rgba: 1, 1, 1, 1  # White background for config screen
             Rectangle:
                 pos: self.pos
                 size: self.size
 
-        # Save Directory Input
+        # Left Side Box
         BoxLayout:
-            orientation: 'horizontal'
-            size_hint_y: None
-            height: dp(40)
-            spacing: dp(10)
+            size_hint_x: 0.2  # Left box, 20% of the width
+            orientation: 'vertical'
+
+        # Center Box for Labels
+        BoxLayout:
+            orientation: 'vertical'  # Center box for texts
+            size_hint_x: 0.6  # Center box, 60% of the width
+            spacing: dp(15)  # Spacing between labels
+            padding: dp(20)  # Padding inside the center box
 
             Label:
-                text: "Save Directory:"
-                size_hint_x: 0.3
-                halign: 'right'
-                valign: 'middle'
-                text_size: self.size
-                color: 0, 0, 0, 1  # Set text color to black
-
-            TextInput:
-                id: directory_input
-                text: ""
-                multiline: False
-                size_hint_x: 0.7
-
-        # Interval Input
-        BoxLayout:
-            orientation: 'horizontal'
-            size_hint_y: None
-            height: dp(40)
-            spacing: dp(10)
+                id: interval_label
+                text: "Interval: " + root.interval
+                font_size: '24sp'  # Increased font size for better readability
+                color: 0, 0, 0, 1  # Black text
+                bold: True  # Make the font bold
+                halign: 'center'  # Center alignment
+                size_hint_y: None
+                height: self.texture_size[1] + dp(10)  # Dynamic height adjustment
+                valign: 'middle'  # Ensure vertical alignment
 
             Label:
-                text: "Interval (seconds):"
-                size_hint_x: 0.3
-                halign: 'right'
-                valign: 'middle'
-                text_size: self.size
-                color: 0, 0, 0, 1  # Set text color to black
-
-            TextInput:
-                id: interval_input
-                text: "30"
-                multiline: False
-                input_filter: 'int'
-                size_hint_x: 0.7
-
-        # Blur Checkbox
-        BoxLayout:
-            orientation: 'horizontal'
-            size_hint_y: None
-            height: dp(40)
-            spacing: dp(10)
+                id: screenshot_label
+                text: "Screenshot Enabled: " + ("Yes" if root.screenshot else "No")
+                font_size: '24sp'  # Increased font size for better readability
+                color: 0, 0, 0, 1  # Black text
+                bold: True  # Make the font bold
+                halign: 'center'  # Center alignment
+                size_hint_y: None
+                height: self.texture_size[1] + dp(10)  # Dynamic height adjustment
+                valign: 'middle'  # Ensure vertical alignment
 
             Label:
-                text: "Blur Screenshots:"
-                size_hint_x: 0.3
-                halign: 'right'
-                valign: 'middle'
-                text_size: self.size
-                color: 0, 0, 0, 1  # Set text color to black
+                id: blur_label
+                text: "Blur Enabled: " + ("Yes" if root.blur else "No")
+                font_size: '24sp'  # Increased font size for better readability
+                color: 0, 0, 0, 1  # Black text
+                bold: True  # Make the font bold
+                halign: 'center'  # Center alignment
+                size_hint_y: None
+                height: self.texture_size[1] + dp(10)  # Dynamic height adjustment
+                valign: 'middle'  # Ensure vertical alignment
+            Widget:
+                size_hint_y: None
+                height: self.parent.height * 0.3
+        # Right Side Box
+        BoxLayout:
+            size_hint_x: 0.2  # Right box, 20% of the width
+            orientation: 'vertical'
 
-            CheckBox:
-                id: blur_checkbox
-                active: False
-                size_hint_x: 0.7
 
-        # Start/Stop Button
-        Button:
-            id: start_stop_button
-            text: "Start"
-            size_hint_y: None
-            height: dp(50)
-            background_color: (0.2, 0.6, 0.8, 1)
-            color: (1, 1, 1, 1)
-            on_press: root.toggle_screenshots()
 
-        # Status Label
-        Label:
-            id: status_label
-            text: "Ready to start"
-            size_hint_y: None
-            height: dp(30)
-            color: 0, 0, 0, 1  # Set text color to black
-            halign: 'center'
-            valign: 'middle'
-            text_size: self.width, None
 
 <AboutScreen>:
     BoxLayout:

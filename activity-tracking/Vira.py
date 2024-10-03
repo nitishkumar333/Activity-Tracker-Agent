@@ -4,7 +4,7 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.clock import Clock
-from kivy.properties import StringProperty
+from kivy.properties import StringProperty,BooleanProperty
 from kivy.core.window import Window
 from kivy.uix.textinput import TextInput
 from kivy.uix.checkbox import CheckBox
@@ -353,7 +353,39 @@ class HomeScreen(Screen):
 
 
 class ConfigScreen(Screen):
-    pass
+    interval = StringProperty('10')  # Default value
+    screenshot = BooleanProperty(True)  # Default value
+    blur = BooleanProperty(False)  # Default value
+
+    def __init__(self, **kwargs):
+        super(ConfigScreen, self).__init__(**kwargs)
+        AgentData = namedtuple('AgentData', ['interval', 'screenshot', 'blur'])
+        self.agent_data = AgentData(interval='10', screenshot=True, blur=True)
+        self.Inet = False 
+        self.config_thread = threading.Thread(target=self.Config_Update, daemon=True)
+        self.config_thread.start()
+
+    def Config_Update(self):
+        self.Inet = self.check_internet_connection()
+        while True:
+            if self.Inet:
+                new_data = AgentConfig.fetch_data()
+                # Update properties dynamically which will automatically reflect in the UI
+                self.interval = new_data.interval
+                self.screenshot = new_data.screenshot
+                self.blur = new_data.blur
+                time.sleep(int(self.interval))
+            
+
+    def check_internet_connection(self):
+        import requests
+        try:
+            requests.get("https://www.google.com", timeout=5)
+            return True
+        except requests.ConnectionError:
+            return False
+
+
 
 class AboutScreen(Screen):
     pass
