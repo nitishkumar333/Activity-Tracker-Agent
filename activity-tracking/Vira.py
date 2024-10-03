@@ -79,15 +79,16 @@ class HomeScreen(Screen):
         self.activity_thread = None
         self.activity_Pop_thread = None
         self.battery_thread = None
+        self.Upload_local_thread = None
         self.screenshot_thread = None  
         self.stop_thread()
         self.percentage = 100
         self.is_plugged = [True]
         self.is_running = False
-        # Define the named tuple
         AgentData = namedtuple('AgentData', ['interval', 'screenshot', 'blur'])
-        self.agent_data = AgentData(interval='600', screenshot=True, blur=True)
-        print(self.agent_data)
+        self.agent_data = AgentData(interval='10', screenshot=True, blur=True)
+        self.file_name_ss = f"{mac_address}/screenshots/"
+        self.file_name = f"{mac_address}/bot_detected/"
 
     def start_timer(self):
         if not self.timer_event:  
@@ -116,7 +117,7 @@ class HomeScreen(Screen):
         self.activity_thread = threading.Thread(target=Final_Tracker, args=(self.bot_activity_detected,self.stop,self.percentage,self.is_plugged), daemon=True)
         self.activity_Pop_thread = threading.Thread(target=self.monitor_bot_activity, args=(self.stop,), daemon=True)
         self.battery_thread = threading.Thread(target=self.check_battery_status, args=(self.stop,), daemon=True)
-
+        self.Upload_local_thread = threading.Thread(target=self.upload_local_screenshots, args=(self.stop,),daemon=True)
         # Start screenshot thread if screenshot feature is enabled
         if self.agent_data.screenshot and self.agent_data.screenshot == True:
             self.is_running = True
@@ -126,6 +127,7 @@ class HomeScreen(Screen):
         self.battery_thread.start()
         self.activity_thread.start()
         self.activity_Pop_thread.start()
+        self.Upload_local_thread.start()
 
     def stop_thread(self):
         self.stop_event.set()
@@ -139,6 +141,8 @@ class HomeScreen(Screen):
         
         if self.battery_thread is not None:
             self.battery_thread = None  
+        if self.Upload_local_thread is not None:
+            self.Upload_local_thread = None  
 
         if self.screenshot_thread and self.screenshot_thread.is_alive():
             self.is_running = False  # This stops the screenshot loop
@@ -153,10 +157,10 @@ class HomeScreen(Screen):
 
             # Check for bot activity
             if self.bot_activity_detected[0]:
-                file_name, log_content, Local_name = self.File_Create()
+                log_content, Local_name = self.File_Create()
                 if Inet:
                     try:
-                        self.upload_log_to_s3(file_name + Local_name, log_content)
+                        self.upload_log_to_s3(self.file_name + Local_name, log_content)
                     except Exception as e:
                         print(f"Error uploading to S3: {str(e)}")
                 else:
@@ -185,7 +189,6 @@ class HomeScreen(Screen):
             # Check internet connection and log status
             if not Inet:
                 Clock.schedule_once(self.show_Inet_warning, 0)
-                threading.Event().wait(10)
             elif Inet:
                 # Check for existing logs to upload
                 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -200,8 +203,8 @@ class HomeScreen(Screen):
                                     log_content = file.read()
 
                                 # Upload the file to S3
-                                self.upload_log_to_s3(file_name + Local, log_content)
-                                print(f"Uploaded {file_name + Local} to S3.")
+                                self.upload_log_to_s3(self.file_name + Local, log_content)
+                                print(f"Uploaded {self.file_name + Local} to S3.")
 
                                 # Delete the file after successful upload
                                 os.remove(file_path)
@@ -222,8 +225,7 @@ class HomeScreen(Screen):
         log_content = f"Bot Detected at {current_datetime}"
         tempuuid = str(datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f")) 
         mac_address = ':'.join(re.findall('..', '%012x' % uuid.getnode()))
-        file_name = f"{mac_address}/bot_detected/"
-        return file_name,log_content,tempuuid+".txt"
+        return log_content,tempuuid+".txt"
 
     def check_battery_status(self, stop):
         while not stop[0]:
@@ -239,13 +241,13 @@ class HomeScreen(Screen):
         notification.notify(
             title='Warning',
             message='Bot activity detected!',
-            timeout=10 ) 
+            timeout=2) 
     
     def show_Inet_warning(self, dt):
         notification.notify(
             title='Warning',
             message='No Internet Connection Found! Please Connect soon!',
-            timeout=5  )# Duration in seconds the notification will be visible
+            timeout=2 )# Duration in seconds the notification will be visible
 
     def check_internet_connection(self):
         try:
@@ -268,8 +270,7 @@ class HomeScreen(Screen):
         current_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         tempuuid = str(datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f")) 
         mac_address = ':'.join(re.findall('..', '%012x' % uuid.getnode()))
-        file_name = f"{mac_address}/screenshots/"
-        return file_name,tempuuid+".png"
+        return tempuuid+".png"
 
     def take_screenshots(self):
         Inet = self.check_internet_connection()
@@ -281,77 +282,74 @@ class HomeScreen(Screen):
         except ValueError:
             return
         
-        count = 0
         while self.is_running:
             ss = pyautogui.screenshot()
-
             # Apply blur if needed
-            if self.agent_data.blur and self.agent_data.blur:
+            if self.agent_data.blur:
                 ss = ss.filter(ImageFilter.GaussianBlur(radius=5))
 
             Inet = self.check_internet_connection()
-            file_name, Local = self.File_Create_SS()
+            Local = self.File_Create_SS()
+            
             if not Inet:
-                # Save screenshot locally if there's no internet
+                self.save_screenshot_locally(ss, Local)
+            else:
+                try:
+                    # Upload the screenshot directly to S3
+                    self.upload_SS_to_s3(ss, self.file_name_ss, Local)
+                    print("Screenshot uploaded to S3.")
+                    # Update agent data from the config
+                    self.agent_data = AgentConfig.fetch_data()
+                except Exception as e:
+                    print(f"Error uploading screenshot: {str(e)}")
+                    break  # Break the loop or handle the error as needed
+            threading.Event().wait(interval)
+            
+    def save_screenshot_locally(self, ss, Local):
+        """Save the screenshot locally if there's no internet."""
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        directory = os.path.join(script_dir, "Queue", "Screen_Shot")
+        
+        try:
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+            
+            file_path = os.path.join(directory, Local)
+            ss.save(file_path)
+            print(f"Screenshot saved locally at {file_path}")
+        except Exception as e:
+            print(f"Error saving screenshot locally: {str(e)}")
+
+    def upload_local_screenshots(self,stop):
+        while not stop[0]:
+            """Check for local screenshots and upload them to S3."""
+            try:
                 script_dir = os.path.dirname(os.path.abspath(__file__))
                 directory = os.path.join(script_dir, "Queue", "Screen_Shot")
-                try:
-                    if not os.path.exists(directory):
-                        os.makedirs(directory)
-
-                    file_path = os.path.join(directory, Local)
-                    ss.save(file_path) 
-                    print(f"Screenshot saved locally at {file_path}")
-                except Exception as e:
-                    print(f"Error saving screenshot locally: {str(e)}")
-            else:
-                # Check if the count matches the interval
-                if count >= interval:
-                    try:
-                        # Upload the screenshot directly to S3
-                        self.upload_SS_to_s3(ss, file_name, Local)
-                        print(f"Screenshot uploaded to S3.")
-                        
-                        # Update agent data from the config
-                        self.agent_data = AgentConfig.fetch_data()
-                    except Exception as e:
-                        print(f"Error uploading screenshot: {str(e)}")
-                        break  # Break the loop or handle the error as needed
-                    # Reset count after uploading
-                    count = 0
-                else:
-                    # Check for existing files to upload
-                    try:
-                        script_dir = os.path.dirname(os.path.abspath(__file__))
-                        directory = os.path.join(script_dir, "Queue", "Screen_Shot")
-                        
-                        if os.path.exists(directory):
-                            files = os.listdir(directory)
-                            for Local in files:
-                                file_path = os.path.join(directory, Local)
-                                if os.path.isfile(file_path):
-                                    try:
-                                        # Check if the file is a screenshot (e.g., ends with .png or .jpg)
-                                        if Local.lower().endswith(('.png', '.jpg', '.jpeg')):
-                                            # Open the image file to upload
-                                            with Image.open(file_path) as image:
-                                                # Upload the screenshot to S3
-                                                self.upload_SS_to_s3(image, file_name, Local)  # Use the correct upload function
-                                                print(f"Uploaded screenshot {Local} to S3.")
-                                                
-                                            # Delete the file after successful upload
-                                            os.remove(file_path)
-                                            print(f"Deleted local screenshot file: {Local}")
-                                    except Exception as e:
-                                        print(f"Error uploading {Local} to S3: {str(e)}")
-                    except Exception as e:
-                        print(f"Error checking local screenshots for upload: {str(e)}")
-
-            # Increment count
-            count += 1
-            time.sleep(100)  # Optional: Add a delay between iterations to control the loop speed
-
-
+                
+                if os.path.exists(directory):
+                    files = os.listdir(directory)
+                    for Local in files:
+                        Inet = self.check_internet_connection()
+                        if Inet:
+                            file_path = os.path.join(directory, Local)
+                            if os.path.isfile(file_path):
+                                try:
+                                    # Check if the file is a screenshot (e.g., ends with .png or .jpg)
+                                    if Local.lower().endswith(('.png', '.jpg', '.jpeg')):
+                                        # Open the image file to upload
+                                        with Image.open(file_path) as image:
+                                            # Upload the screenshot to S3
+                                            self.upload_SS_to_s3(image,self.file_name_ss,Local)  # Use the correct upload function
+                                            print(f"Uploaded screenshot {Local} to S3.")
+                                        
+                                        # Delete the file after successful upload
+                                        os.remove(file_path)
+                                        print(f"Deleted local screenshot file: {Local}")
+                                except Exception as e:
+                                    print(f"Error uploading {Local} to S3: {str(e)}")
+            except Exception as e:
+                print(f"Error checking local screenshots for upload: {str(e)}")
 
 
 class ConfigScreen(Screen):
