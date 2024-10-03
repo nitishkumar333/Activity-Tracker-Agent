@@ -8,7 +8,7 @@ last_position = None
 CLICK_LIMIT = 10
 
 # Function to detect clicks and detect bots
-def detect_clicks(bot_activity_detected):
+def detect_clicks(bot_activity_detected,):
     print("Click detection Go!..")
     
     global click_count, last_position
