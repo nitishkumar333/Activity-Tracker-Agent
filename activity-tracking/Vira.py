@@ -41,7 +41,9 @@ def run_in_thread(script_name):
 
 load_dotenv() 
 
-aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
+#details
+
+aws_access_key_id = os.getenv('AWS_ACCES_KEY_ID')
 aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
 region_name = os.getenv('AWS_REGION')
 bucket_name = os.getenv('BUCKET_NAME')
@@ -53,6 +55,7 @@ s3_client = boto3.client(
     region_name = region_name
 )
 mac_address = ':'.join(re.findall('..', '%012x' % uuid.getnode()))
+#agent 
 
 class AgentConfig:
     global s3_client
@@ -78,9 +81,12 @@ class HomeScreen(Screen):
         self.activity_thread = None
         self.activity_Pop_thread = None
         self.battery_thread = None
+        self.screenshot_thread = None  
         self.stop_thread()
         self.percentage = 100
         self.is_plugged = [True]
+        self.is_running = False
+        self.agent_data = AgentConfig.fetch_data()
 
     def start_timer(self):
         if not self.timer_event:  
@@ -103,28 +109,41 @@ class HomeScreen(Screen):
         minutes, seconds = divmod(remainder, 60)
         self.timer_text = f"{hours:02}:{minutes:02}:{seconds:02}" 
 
-    
+
     def start_thread(self):
         self.stop_event.clear()  
-        self.activity_thread = threading.Thread(target=Final_Tracker, args=(self.bot_activity_detected,self.stop,self.percentage,self.is_plugged
-        ), daemon=True)
+        self.activity_thread = threading.Thread(target=Final_Tracker, args=(self.bot_activity_detected,self.stop,self.percentage,self.is_plugged), daemon=True)
         self.activity_Pop_thread = threading.Thread(target=self.monitor_bot_activity, args=(self.stop,), daemon=True)
         self.battery_thread = threading.Thread(target=self.check_battery_status, args=(self.stop,), daemon=True)
+
+        # Start screenshot thread if screenshot feature is enabled
+        if self.agent_data.screenshot and self.agent_data.screenshot == True:
+            self.is_running = True
+            self.screenshot_thread = threading.Thread(target=self.take_screenshots, daemon=True)
+            self.screenshot_thread.start()
+
         self.battery_thread.start()
         self.activity_thread.start()
         self.activity_Pop_thread.start()
 
     def stop_thread(self):
         self.stop_event.set()
+        
         if self.activity_thread is not None:
             self.activity_thread.join()
             self.activity_thread = None  
-        
+
         if self.activity_Pop_thread is not None:
             self.activity_Pop_thread = None  
         
         if self.battery_thread is not None:
             self.battery_thread = None  
+
+        if self.screenshot_thread and self.screenshot_thread.is_alive():
+            self.is_running = False  # This stops the screenshot loop
+            self.screenshot_thread.join()  # Ensure thread has finished
+            self.screenshot_thread = None
+
 
 
     def monitor_bot_activity(self, stop):
@@ -232,59 +251,16 @@ class HomeScreen(Screen):
             return True
         except requests.ConnectionError:
             return False
-        
 
 
-class ConfigScreen(Screen):
-    global mac_address
-    global s3_client
-    def __init__(self, **kwargs):
-        super(ConfigScreen, self).__init__(**kwargs)
-        self.is_running = False
-        self.screenshot_thread = None
-        self.agent_data = AgentConfig.fetch_data()
-        # self.agent_data.interval -> str
-        # self.agent_data.blur -> bool
-        # self.agent_data.screenshot -> bool
 
-    def toggle_screenshots(self):
-        if self.is_running:
-            self.stop_screenshots()
-        else:
-            self.start_screenshots()
-
-    def start_screenshots(self):
-        try:
-            interval = int(self.agent_data.interval)
-            if interval and interval < 10:
-                raise ValueError("Interval must be greater than 10")
-
-            self.is_running = True
-            if self.agent_data.screenshot and self.agent_data.screenshot == True:
-                self.screenshot_thread = threading.Thread(target=self.take_screenshots, daemon=True)
-                self.screenshot_thread.start()
-            else:
-                Clock.schedule_once(lambda dt: self.update_status("Feature not enabled"))
-                return
-            self.ids.start_stop_button.text = 'Stop'
-            blur_status = "blurred" if self.agent_data.blur and self.agent_data.blur == True else "normal"
-            self.ids.status_label.text = f"Taking {blur_status} screenshots every {interval} seconds"
-        except ValueError as e:
-            self.ids.status_label.text = f"Error: {str(e)}"
-
-    def stop_screenshots(self):
-        self.is_running = False
-        self.ids.start_stop_button.text = 'Start'
-        if self.screenshot_thread and self.screenshot_thread.is_alive():
-            self.screenshot_thread.join()
-        self.ids.status_label.text = "Screenshot capture stopped"
-
-    def upload_to_s3(self, image):
+    #ScreenShot Work  
+    def upload_SS_to_s3(self, image):
         # Save screenshot to an in-memory file (BytesIO)
         img_byte_arr = BytesIO()
         image.save(img_byte_arr, format='PNG')
         img_byte_arr.seek(0)
-        tempuuid = str(uuid.uuid4())[0:15] # random string
+        tempuuid = str(datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f")) 
         # Define S3 file path and upload
         s3_path = f'{mac_address}/screenshots/{tempuuid}.png'
         s3_client.upload_fileobj(img_byte_arr, bucket_name, s3_path)
@@ -298,7 +274,6 @@ class ConfigScreen(Screen):
         #     except Exception as e:
         #         Clock.schedule_once(lambda dt: self.update_status(f"Error creating directory: {str(e)}"))
         #         return
-
         try:
             interval = int(self.agent_data.interval)
         except ValueError:
@@ -307,7 +282,6 @@ class ConfigScreen(Screen):
 
         count = 1
         while self.is_running:
-            # path = os.path.join(directory, f'screenshot_{count}.png')
             ss = pyautogui.screenshot()
 
             if self.agent_data.blur and self.agent_data.blur == True:
@@ -319,7 +293,7 @@ class ConfigScreen(Screen):
                 threading.Event().wait(5)
             else:
                 try:
-                    self.upload_to_s3(ss)
+                    self.upload_SS_to_s3(ss)
                     print(f"Screenshot saved")
                     count += 1
                 except Exception as e:
@@ -328,26 +302,16 @@ class ConfigScreen(Screen):
 
             time.sleep(interval)
 
-        # Update status when loop ends
         if not self.is_running:
             Clock.schedule_once(lambda dt: self.update_status("Screenshot capture stopped"))
 
     def update_status(self, message):
         self.ids.status_label.text = message
 
-    def show_Inet_warning(self, dt):
-        notification.notify(
-            title='Warning',
-            message='No Internet Connection Found! Please Connect soon!',
-            timeout=10  )# Duration in seconds the notification will be visible
 
-    def check_internet_connection(self):
-        try:
-            requests.get("https://www.google.com", timeout=5)
-            return True
-        except requests.ConnectionError:
-            return False
 
+class ConfigScreen(Screen):
+    pass
 
 class AboutScreen(Screen):
     pass
