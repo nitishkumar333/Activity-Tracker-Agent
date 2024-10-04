@@ -29,26 +29,26 @@ The **Activity Tracker Agent** is a Python-based desktop application designed to
 #
 
 ### 🌐 **Web Application**
-This allows users to configure settings like screenshot interval, enable/disable screenshots, blur.
-
-## 📸 **App Preview**
-
-| **App Landing**  | **Enabled Settings**                           |
-|------------------------------------------------------|---------------------------------------------------------|
-| ![Configuration Interface](public/vira_landing.png)  | ![Blurred Screenshot](public/vira_config.png) |
+This allows users to configure settings of Python Agent like screenshot interval, enable/disable screenshots and blur.
 
 ## 🌐 **Web App Preview**
 
-| **User Login**  | **Configuration Module**                           |
+| **Authentication**  | **Configurations**                           |
 |------------------------------------------------------|---------------------------------------------------------|
 | ![Configuration Interface](public/web_login.png)  | ![Configuration Module](public/web_configure.png) |
+
+## 📸 **Python App Preview**
+
+| **Start/Stop Script**  | **Realtime Settings**                           |
+|------------------------------------------------------|---------------------------------------------------------|
+| ![Configuration Interface](public/vira_landing.png)  | ![Blurred Screenshot](public/vira_config.png) |
 
 ## 🛠️ **Working**
 
 ### 🧑‍💻 **Main Workflow**
-The application starts by initializing 🖱️ **mouse**, ⌨️ **keyboard**, and 🌍 **time zone tracking** on separate threads to continuously monitor activity. Based on the captured data, the system detects patterns of human activity and flags bot-like behavior using advanced algorithms. Users can configure settings such as screenshot intervals, blurring options, and more via the accompanying web app.
+The application starts by initializing **mouse**, **keyboard**, and **time zone tracking** on separate threads to continuously monitor activity.
 
-#### 🖥️ **Code Overview**
+#### 🖥️ **Main Code Overview**
 ```python
 import threading
 import mouse_tracking
@@ -72,40 +72,7 @@ if __name__ == "__main__":
     main()
 ```
 
-### 🖱️ **Mouse Tracking**
-Captures mouse movement patterns and analyzes them to distinguish between natural human behavior and automated inputs.
-
-### ⌨️ **Keyboard Tracking**
-Monitors key press events and flags suspicious typing patterns that indicate bot-like activity.
-
-```python
-def monitor_keyboard():
-    keyboard.hook(on_key_event)
-    keyboard.wait('esc')
-```
-
-### 🌍 **Time Zone Tracking**
-Real-time detection of time zone changes, logging every modification.
-
-```python
-def detect_time_zone_change():
-    # Listens for system time zone changes and adjusts logs accordingly
-    ...
-```
-
-### 👆 **Mouse Click Tracking**
-Detects repeated clicks without mouse movement and flags it as automated if the frequency exceeds a certain threshold.
-
-```python
-def detect_clicks():
-    with mouse.Listener(on_click=on_click, on_move=on_move) as listener:
-        listener.join()
-```
-
-### 🕒 **Inactivity Detection**
-Tracks idle time when there is no user activity and logs it as inactivity once a defined threshold is reached.
-
-## 📂 **Setup and Installation**
+## 📂 **Setting up Python Agent**
 
 1. **Clone the repository**:
    ```bash
@@ -114,25 +81,52 @@ Tracks idle time when there is no user activity and logs it as inactivity once a
 
 2. **Install required dependencies**:
    ```bash
-   pip install -r requirements.txt
+    pip install -r requirements.txt
    ```
 
-   Required libraries include:
-   - `pynput`
-   - `pytz`
-   - `ctypes`
-   - `keyboard`
-   - `pyautogui`
-   - `Pillow`
+3. **Add credentials in .env**:
+   ```bash
+    AWS_ACCESS_KEY_ID = 'your_key_id'
+    AWS_SECRET_ACCESS_KEY = 'secret_key'
+    REGION_NAME = 'us-east-1'
+    BUCKET_NAME = 'bucket_name'
+    ENCRYPTION_KEY = 'your_ency_key'
+   ```
+
+4. **Run the application**:
+   ```bash
+   cd activity-tracking
+   python vira.py
+   ```
+
+## 📂 **Setting up Wep App**
+
+1. **Install required dependencies**:
+   ```bash
+   cd web_agent
+   npm install
+   ```
+  
+2. **Add credentials in .env**:
+   ```bash
+    REACT_APP_AWS_ACCESS_KEY_ID = 'your_key_id'
+    REACT_APP_AWS_SECRET_ACCESS_KEY = 'secret_key'
+    REACT_APP_AWS_REGION_NAME = 'us-east-1'
+    REACT_APP_AWS_BUCKET_NAME = 'bucket_name'
+    REACT_APP_AWS_BUCKET_NAME = 'your_ency_key'
+
+    REACT_APP_FIREBASE_API_KEY = 'your_key_id'
+    REACT_APP_FIREBASE_AUTH_DOMAIN = 'your_auth_id'
+    REACT_APP_FIREBASE_PROJECT_ID = 'your_project_id'
+    REACT_APP_FIREBASE_STORAGE_BUCKET = 'your_storage_id'
+    REACT_APP_FIREBASE_MESSAGING_ID = 'your_message_id'
+    REACT_APP_FIREBASE_APP_ID = 'your_firebase_app_id'
+   ```
 
 3. **Run the application**:
    ```bash
-   python final.py
+   npm start
    ```
-
-## 🎯 **Future Enhancements**
-- 🔍 **Advanced Filtering**: Implement more sophisticated algorithms for detecting automated user behavior.
-- 🔔 **Custom Alerts**: Expand alert options for more scenarios, such as extended user inactivity or high bot-like activity.
 
 ## 👥 **Contributors**
 This project was developed by:
@@ -142,5 +136,3 @@ This project was developed by:
 - [Nimisha](https://github.com/)
 
 --- 
-
-This enhanced README makes the app visually engaging and interactive with the help of emojis while maintaining all the important information.
