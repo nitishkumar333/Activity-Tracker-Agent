@@ -35,7 +35,7 @@ This allows users to configure settings of Python Agent like screenshot interval
 
 | **Authentication**  | **Configurations**                           |
 |------------------------------------------------------|---------------------------------------------------------|
-| ![Configuration Interface](public/web_login.png)  | ![Configuration Module](public/web_configure.png) |
+| ![Configuration Interface](public/web_login2.png)  | ![Configuration Module](public/web_configure2.png) |
 
 ## 📸 **Python App Preview**
 
