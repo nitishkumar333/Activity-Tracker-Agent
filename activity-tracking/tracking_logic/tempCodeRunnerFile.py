@@ -1,1 +1,0 @@
- click_pause_event
