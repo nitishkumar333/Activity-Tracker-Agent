@@ -93,7 +93,6 @@ class HomeScreen(Screen):
         self.stop_event = threading.Event() 
         self.activity_thread = None
         self.activity_Pop_thread = None
-        self.battery_thread = None
         self.Upload_local_thread = None
         self.screenshot_thread = None  
         self.stop_thread()
@@ -134,14 +133,12 @@ class HomeScreen(Screen):
         self.stop_event.clear()  
         self.activity_thread = threading.Thread(target=Final_Tracker, args=(self.bot_activity_detected,self.stop,self.Time_pop), daemon=True)
         self.activity_Pop_thread = threading.Thread(target=self.monitor_bot_activity, args=(self.stop,), daemon=True)
-        self.battery_thread = threading.Thread(target=self.check_battery_status, args=(self.stop,), daemon=True)
         # Start screenshot thread if screenshot feature is enabled
         if self.agent_data.screenshot and self.agent_data.screenshot == True:
             self.is_running = True
             self.screenshot_thread = threading.Thread(target=self.take_screenshots, args=(self.stop,), daemon=True)
             self.screenshot_thread.start()
 
-        self.battery_thread.start()
         self.activity_thread.start()
         self.activity_Pop_thread.start()
         
@@ -156,8 +153,6 @@ class HomeScreen(Screen):
         if self.activity_Pop_thread is not None:
             self.activity_Pop_thread = None  
         
-        if self.battery_thread is not None:
-            self.battery_thread = None  
         if self.Upload_local_thread is not None:
             self.Upload_local_thread = None  
 
@@ -246,14 +241,6 @@ class HomeScreen(Screen):
         tempuuid = str(datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f")) 
         mac_address = ':'.join(re.findall('..', '%012x' % uuid.getnode()))
         return log_content,tempuuid+".txt"
-
-    def check_battery_status(self, stop):
-        while not stop[0]:
-            battery = psutil.sensors_battery()  # Get battery status
-            if battery is not None:
-                self.percentage = battery.percent
-                self.is_plugged = [battery.power_plugged]
-            threading.Event().wait(600)  
     
 
     def check_internet_connection(self):
