@@ -91,7 +91,7 @@ class HomeScreen(Screen):
         self.is_plugged = [True]
         self.is_running = False
         AgentData = namedtuple('AgentData', ['interval', 'screenshot', 'blur'])
-        self.agent_data = AgentData(interval='10', screenshot=True, blur=True)
+        self.agent_data = AgentData(interval='600', screenshot=True, blur=True)
         self.file_name_ss = f"{mac_address}/screenshots/"
         self.file_name = f"{mac_address}/bot_detected/"
         self.Upload_local_thread = threading.Thread(target=self.upload_locals,daemon=True)
@@ -361,14 +361,14 @@ class HomeScreen(Screen):
                 logging.error(f"Error during upload process: {str(e)}")
 
 class ConfigScreen(Screen):
-    interval = StringProperty('10')  # Default value
+    interval = StringProperty('600')  # Default value
     screenshot = BooleanProperty(True)  # Default value
     blur = BooleanProperty(False)  # Default value
 
     def __init__(self, **kwargs):
         super(ConfigScreen, self).__init__(**kwargs)
         AgentData = namedtuple('AgentData', ['interval', 'screenshot', 'blur'])
-        self.agent_data = AgentData(interval='10', screenshot=True, blur=True)
+        self.agent_data = AgentData(interval='600', screenshot=True, blur=True)
         self.Inet = False 
         self.config_thread = threading.Thread(target=self.Config_Update, daemon=True)
         self.config_thread.start()
