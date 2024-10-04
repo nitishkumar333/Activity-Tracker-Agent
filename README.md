@@ -133,6 +133,6 @@ This project was developed by:
 - [Nitish Kumar](https://github.com/nitishkumar333)
 - [Ayush Sharma](https://github.com/ayusharma03)
 - [Abhishek Dixit](https://github.com/Adixit8604)
-- [Nimisha](https://github.com/)
+- [Nimisha](https://github.com/NimishaKulshrestha)
 
 --- 
