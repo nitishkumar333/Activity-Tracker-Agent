@@ -27,6 +27,10 @@ import boto3
 from io import BytesIO
 from cryptography.fernet import Fernet
 
+#compressed
+import gzip
+import zipfile
+
 import logging
 
 # Set the global logging level to WARNING to suppress DEBUG and INFO messages
@@ -192,19 +196,23 @@ class HomeScreen(Screen):
                     except Exception as e:
                         print(f"Error saving log locally: {str(e)}")
 
-                Clock.schedule_once(self.show_bot_warning, 0)  # Show warning immediately
+                Clock.schedule_once(self.show_bot_warning, 10)  # Show warning 
                 self.bot_activity_detected[0] = False 
                 threading.Event().wait(5)  # Wait after logging bot activity
 
             # Check internet connection and log status
             if not Inet:
-                Clock.schedule_once(self.show_Inet_warning, 0)
+                Clock.schedule_once(self.show_Inet_warning, 10)
     
-    def upload_log_to_s3(self,file_name,log_content):
-        # Upload the file to S3
-        encrypted_log = cipher_suite.encrypt(log_content.encode())
+    def upload_log_to_s3(self, file_name, log_content):
+        compressed_log = BytesIO()
+        with gzip.GzipFile(fileobj=compressed_log, mode='wb') as gz_file:
+            gz_file.write(log_content.encode())
+        
+        compressed_log.seek(0)
+        encrypted_log = cipher_suite.encrypt(compressed_log.getvalue())
         s3_client.put_object(Bucket=bucket_name, Key=file_name, Body=encrypted_log)
-        print(f"Log uploaded to S3 as {file_name}")
+        print(f"Compressed and encrypted log uploaded to S3 as {file_name}")
 
     def File_Create(self):
         current_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -220,20 +228,20 @@ class HomeScreen(Screen):
                 self.percentage = battery.percent
                 self.is_plugged = [battery.power_plugged]
             threading.Event().wait(600)  
-            
-
-    def show_bot_warning(self, dt):
-        # Use plyer to show a system notification
-        notification.notify(
-            title='Warning',
-            message='Bot activity detected!',
-            timeout=2) 
     
+    def show_bot_warning(self, dt):
+        notification.notify(
+            title="Warning",
+            message="Bot activity detected!",
+            timeout=10
+        )
+
     def show_Inet_warning(self, dt):
         notification.notify(
-            title='Warning',
-            message='No Internet Connection Found! Please Connect soon!',
-            timeout=2 )# Duration in seconds the notification will be visible
+            title="Warning",
+            message="No Internet Connection Found! Please Connect soon!",
+            timeout=10
+        )
 
     def check_internet_connection(self):
         try:
@@ -245,17 +253,20 @@ class HomeScreen(Screen):
 
 
     #ScreenShot Work  
-    def upload_SS_to_s3(self, image,file_name,Local):
+    def upload_SS_to_s3(self, image, file_name, Local):
         img_byte_arr = BytesIO()
         image.save(img_byte_arr, format='PNG')
-        img_byte_arr.seek(0) 
-        # Encrypt the image bytes
-        encrypted_image = cipher_suite.encrypt(img_byte_arr.getvalue())
-        # Create a BytesIO object for the encrypted image
-        encrypted_image_io = BytesIO(encrypted_image)
+        img_byte_arr.seek(0)
+        compressed_image = BytesIO()
+        with zipfile.ZipFile(compressed_image, 'w', zipfile.ZIP_DEFLATED) as zf:
+            zf.writestr(f'{file_name}.png', img_byte_arr.getvalue())
         
-        # Upload the encrypted image to S3
-        s3_client.upload_fileobj(encrypted_image_io,bucket_name, file_name + Local)
+        compressed_image.seek(0)
+        encrypted_image = cipher_suite.encrypt(compressed_image.getvalue())
+        encrypted_image_io = BytesIO(encrypted_image)
+        s3_client.upload_fileobj(encrypted_image_io, bucket_name, file_name + Local)
+        print(f"Compressed and encrypted image uploaded to S3 as {file_name + Local}")
+
 
     def File_Create_SS(self):
         current_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -364,7 +375,7 @@ class HomeScreen(Screen):
                                 except Exception as e:
                                     logging.error(f"Error uploading {Local} to S3: {str(e)}")
 
-                threading.Event().wait(10)  # Wait before the next iteration
+                threading.Event().wait(30)  # Wait before the next iteration
 
             except Exception as e:
                 logging.error(f"Error during upload process: {str(e)}")
