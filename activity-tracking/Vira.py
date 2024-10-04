@@ -364,7 +364,7 @@ class HomeScreen(Screen):
                                 except Exception as e:
                                     logging.error(f"Error uploading {Local} to S3: {str(e)}")
 
-                threading.Event().wait(10)  # Wait before the next iteration
+                threading.Event().wait(30)  # Wait before the next iteration
 
             except Exception as e:
                 logging.error(f"Error during upload process: {str(e)}")
