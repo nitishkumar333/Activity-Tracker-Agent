@@ -26,6 +26,10 @@ The **Activity Tracker Agent** is a Python-based desktop application designed to
 - 🫸 **Queue Management**: stores the files in the queue if no internet connection, then after connectivity uploads to S3.
 - ☁️ **Amazon S3 Upload**: Uploads screenshots to Amazon S3 after connection establish.
 
+### 📸 **Encryption and Compression**
+- 🫸 **Encryption**: Uses cryptography library for Encryption of screenshots
+- ☁️ **Compression**: Uses gzip and zipfile library for compression of screenshots
+
 #
 
 ### 🌐 **Web Application**
