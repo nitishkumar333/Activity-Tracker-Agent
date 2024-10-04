@@ -2,7 +2,7 @@
 
 ## Overview
 
-The **Activity Tracker Agent** is designed to monitor user activity and identify automated/scripted inputs using advanced tracking techniques for mouse movement, mouse clicks, keyboard events, and time zone changes. This document provides a detailed explanation of how each tracking function works within the system.
+This application monitors system activity and identify automated/scripted inputs using advanced tracking techniques for mouse movement, mouse clicks, keyboard events, and time zone changes. This document provides a detailed explanation of how each tracking function works within the system.
 
 ---
 
@@ -152,27 +152,4 @@ The screenshot functionality allows you to capture periodic screenshots and prov
 - **Configurable Intervals**: Users can set the interval at which screenshots are taken.
 - **Blur Option**: Screenshots can be blurred to protect sensitive information.
 
----
-
-## How to Run the Application
-
-### Requirements
-- Python 3.x
-- Libraries: `pynput`, `keyboard`, `ctypes`, `pytz`, `tzlocal`, `pyautogui`, `Pillow`
-
-### Setup
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/your-username/activity-tracker-agent.git
-   ```
-
-2. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Run the main script:**
-   ```bash
-   python main.py
-   ```
 ---
