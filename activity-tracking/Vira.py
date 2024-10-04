@@ -1,3 +1,20 @@
+from Config import initialize
+import os
+import sys
+# Ensure that the parent directory is in sys.path for importing Config
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from Config import initialize  # Import the initialize function
+
+# Get the path for first_run.txt relative to the current script
+first_run_path = os.path.join(os.path.dirname(__file__), 'first_run.txt')
+
+# Check if this is the first run of the program
+if not os.path.exists(first_run_path):
+    initialize()  # Call the function to set up requirements, etc.
+else:
+    print("Program has been run before.")
+
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.screenmanager import ScreenManager, Screen
@@ -14,14 +31,13 @@ from plyer import notification
 from system_info import get_system_info
 import requests
 import psutil
-import sys
 from collections import namedtuple
 from dotenv import load_dotenv
 import pyautogui
 import threading
 import time, json
 from datetime import datetime
-import os, uuid, re
+import uuid, re
 from PIL import Image, ImageFilter
 import boto3
 from io import BytesIO
