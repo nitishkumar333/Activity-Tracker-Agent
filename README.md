@@ -1,47 +1,35 @@
-Here's a more engaging version of the README with added emojis to make it visually appealing:
-
----
-
 # 📊 **Activity Tracker Agent**
 
-The **Activity Tracker Agent** is a Python-based desktop application designed to monitor user activity and distinguish between genuine user behavior and automated/scripted inputs. It features 🖱️ **mouse** and ⌨️ **keyboard** tracking, 🌍 **time zone detection**, and 📸 **configurable screenshot intervals**, with an optional blur feature. The application can upload screenshots to cloud storage, making it an ideal solution for tracking employee activity remotely.
+The **Activity Tracker Agent** is a Python-based desktop application designed to monitor user activity and distinguish between genuine user behavior and automated/scripted inputs.
 
-### 🌐 **Web Application Integration**
-A separate **React-based web app** allows users to configure settings like screenshot frequency, enable/disable screenshots, and choose between blurred or non-blurred images. The web interface provides an intuitive way to manage these options in real-time.
 
-| **Architecture** |
+| **Working** |
 |:------------:|
 | ![Configuration Interface](public/charts_whitebg.gif) |
 
 ## ✨ **Features**
 
 ### 🔍 **Activity Tracking**
-- 🖱️ **Mouse Tracking**: Detects user mouse movements and differentiates between human and bot-like behavior.
-- 👆 **Mouse Click Tracking**: Identifies patterns in mouse clicks to detect automation (e.g., clicking without movement).
-- ⌨️ **Keyboard Tracking**: Monitors key press events and detects automation through timing analysis.
+- 🖱️ **Mouse Tracking**: Identifies patterns in cursor moving.
+- 👆 **Mouse Click Tracking**: Track if mouse is clicking without movement.
+- ⌨️ **Keyboard Tracking**: Monitors key press intverals and analysis them.
 
 ### 🕑 **Time Zone Management**
-- 🌍 **Real-Time Time Zone Detection**: Automatically detects system time zone changes and flags timestamps accordingly.
-- ⏲️ **Time Zone Change Logging**: Logs time zone modifications and adjusts activity tracking.
+- 🌍 **Time Zone Detection**: Automatically detects system time zone changes in system and report timestamps.
 
 ### 📸 **Screenshot Capture**
-- ⏱️ **Configurable Intervals**: Set screenshot intervals (e.g., every 5, 10 minutes, etc.), managed through a **Web Interface**.
-- 😶‍🌫️ **Optional Blur**: Enable or disable screenshot blurring for privacy, configurable via the web app.
-- ☁️ **Cloud Storage Upload**: Securely uploads screenshots to cloud platforms like Amazon S3.
-
-### ⭐ **More Features**
+- ⏱️ **Configurable Intervals**: Set screenshot intervals, through the web app.
+- 😶‍🌫️ **Optional Blur**: Enable/disable blurring for privacy, via the web app.
+- ☁️ **Cloud Storage Upload**: Uploads screenshots to Amazon S3.
   
-#### **🕒 User Inactivity Detection**
-- **Idle Time Monitoring**: Detects inactivity when no mouse or keyboard activity is detected for a configurable duration and logs idle periods for better activity tracking.
+### 📸 **No internet connection**
+- 🫸 **Queue Management**: stores the files in the queue if no internet connection, then after connectivity uploads to S3.
+- ☁️ **Amazon S3 Upload**: Uploads screenshots to Amazon S3 after connection establish.
 
-#### **🔋 Auto-Stop on Low Battery**
-- **Battery Monitoring**: Automatically pauses activity tracking when the device’s battery level drops below a specified threshold, preventing data loss or excessive power consumption.
+#
 
-#### **📜 Detailed Logging & Data Export**
-- **Export Logs**: All captured activity logs (mouse, keyboard, time zone changes) can be exported to CSV or JSON formats for further analysis.
-
-#### **🔔 Custom Alert System**
-- **Real-time Alerts**: Sends customizable alerts based on predefined conditions like prolonged inactivity, suspicious automation, or system time zone changes. Alerts can be sent via email or pushed to a dashboard.
+### 🌐 **Web Application**
+This allows users to configure settings like screenshot interval, enable/disable screenshots, blur.
 
 ## 📸 **App Preview**
 
