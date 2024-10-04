@@ -2,10 +2,12 @@
 
 The **Activity Tracker Agent** is a Python-based desktop application designed to monitor user activity and distinguish between genuine user behavior and automated/scripted inputs.
 
+### 🌐 **Web Application Integration**
+A **React-based web app** allows users to configure settings like screenshot frequency, enable/disable screenshots, and choose between blurred or non-blurred images. The web interface provides an intuitive way to manage these options in real-time.
 
-| **Working** |
+| **Architecture** |
 |:------------:|
-| ![Configuration Interface](public/charts_whitebg.gif) |
+| ![Configuration Interface](public/full_chart.gif) |
 
 ## ✨ **Features**
 
@@ -131,6 +133,10 @@ if __name__ == "__main__":
    ```bash
    npm start
    ```
+
+## 🎯 **Future Enhancements**
+- 🔍 **Advanced Filtering**: Implement more sophisticated algorithms for detecting automated user behavior.
+- 🔔 **Custom Alerts**: Expand alert options for more scenarios, such as extended user inactivity or high bot-like activity.
 
 ## 👥 **Contributors**
 This project was developed by:
