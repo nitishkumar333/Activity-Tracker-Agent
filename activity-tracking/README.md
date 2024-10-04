@@ -1,7 +1,3 @@
-Here’s a detailed `README.md` file that explains how the different tracking functions work in the **Activity Tracker Agent** project:
-
----
-
 # 📊 Activity Tracker Agent
 
 ## Overview

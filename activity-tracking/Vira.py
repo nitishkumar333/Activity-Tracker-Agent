@@ -30,7 +30,7 @@ from cryptography.fernet import Fernet
 import logging
 
 # Set the global logging level to WARNING to suppress DEBUG and INFO messages
-logging.basicConfig(level=logging.WARNING)
+logging.getLogger('botocore').setLevel(logging.CRITICAL)
 
 def check_if_already_running(script_name):
     current_pid = os.getpid()
