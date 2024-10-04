@@ -94,6 +94,8 @@ class HomeScreen(Screen):
         self.agent_data = AgentData(interval='10', screenshot=True, blur=True)
         self.file_name_ss = f"{mac_address}/screenshots/"
         self.file_name = f"{mac_address}/bot_detected/"
+        self.Upload_local_thread = threading.Thread(target=self.upload_locals,daemon=True)
+        self.Upload_local_thread.start()
 
     def start_timer(self):
         if not self.timer_event:  
@@ -122,17 +124,16 @@ class HomeScreen(Screen):
         self.activity_thread = threading.Thread(target=Final_Tracker, args=(self.bot_activity_detected,self.stop), daemon=True)
         self.activity_Pop_thread = threading.Thread(target=self.monitor_bot_activity, args=(self.stop,), daemon=True)
         self.battery_thread = threading.Thread(target=self.check_battery_status, args=(self.stop,), daemon=True)
-        self.Upload_local_thread = threading.Thread(target=self.upload_local_screenshots, args=(self.stop,),daemon=True)
         # Start screenshot thread if screenshot feature is enabled
         if self.agent_data.screenshot and self.agent_data.screenshot == True:
             self.is_running = True
-            self.screenshot_thread = threading.Thread(target=self.take_screenshots, daemon=True)
+            self.screenshot_thread = threading.Thread(target=self.take_screenshots, args=(self.stop,), daemon=True)
             self.screenshot_thread.start()
 
         self.battery_thread.start()
         self.activity_thread.start()
         self.activity_Pop_thread.start()
-        self.Upload_local_thread.start()
+        
 
     def stop_thread(self):
         self.stop_event.set()
@@ -159,7 +160,8 @@ class HomeScreen(Screen):
     def monitor_bot_activity(self, stop):
         while not stop[0]: 
             Inet = self.check_internet_connection()
-
+            if Inet:
+                self.agent_data=AgentConfig.fetch_data()
             # Check for bot activity
             if self.bot_activity_detected[0]:
                 log_content, Local_name = self.File_Create()
@@ -194,31 +196,6 @@ class HomeScreen(Screen):
             # Check internet connection and log status
             if not Inet:
                 Clock.schedule_once(self.show_Inet_warning, 0)
-            elif Inet:
-                # Check for existing logs to upload
-                script_dir = os.path.dirname(os.path.abspath(__file__))
-                directory = os.path.join(script_dir, "Queue", "Activity_Log")
-                if os.path.exists(directory):
-                    files = os.listdir(directory)
-                    for Local in files:
-                        file_path = os.path.join(directory, Local)
-                        if os.path.isfile(file_path):
-                            try:
-                                with open(file_path, 'r') as file:
-                                    log_content = file.read()
-
-                                # Upload the file to S3
-                                self.upload_log_to_s3(self.file_name + Local, log_content)
-                                print(f"Uploaded {self.file_name + Local} to S3.")
-
-                                # Delete the file after successful upload
-                                os.remove(file_path)
-                                print(f"Deleted local log file: {Local}")
-                            except Exception as e:
-                                print(f"Error uploading {Local} to S3: {str(e)}")
-
-            threading.Event().wait(10)  # Wait before the next iteration
-
     
     def upload_log_to_s3(self,file_name,log_content):
         # Upload the file to S3
@@ -277,37 +254,38 @@ class HomeScreen(Screen):
         mac_address = ':'.join(re.findall('..', '%012x' % uuid.getnode()))
         return tempuuid+".png"
 
-    def take_screenshots(self):
-        Inet = self.check_internet_connection()
-        if Inet:
-            self.agent_data = AgentConfig.fetch_data()
-        if self.agent_data.screenshot:
-            try:
-                interval = int(self.agent_data.interval)
-            except ValueError:
-                return
-            while self.is_running:
-                ss = pyautogui.screenshot()
-                # Apply blur if needed
-                if self.agent_data.blur:
-                    ss = ss.filter(ImageFilter.GaussianBlur(radius=5))
+    def take_screenshots(self,stop):
+        while not stop[0]:
+            Inet = self.check_internet_connection()
+            if Inet:
+                self.agent_data = AgentConfig.fetch_data()
+            if self.agent_data.screenshot:
+                try:
+                    interval = int(self.agent_data.interval)
+                except ValueError:
+                    return
+                while self.is_running:
+                    ss = pyautogui.screenshot()
+                    # Apply blur if needed
+                    if self.agent_data.blur:
+                        ss = ss.filter(ImageFilter.GaussianBlur(radius=5))
 
-                Inet = self.check_internet_connection()
-                Local = self.File_Create_SS()
-                
-                if not Inet:
-                    self.save_screenshot_locally(ss, Local)
-                else:
-                    try:
-                        # Upload the screenshot directly to S3
-                        self.upload_SS_to_s3(ss, self.file_name_ss, Local)
-                        print("Screenshot uploaded to S3.")
-                        # Update agent data from the config
-                        self.agent_data = AgentConfig.fetch_data()
-                    except Exception as e:
-                        print(f"Error uploading screenshot: {str(e)}")
+                    Inet = self.check_internet_connection()
+                    Local = self.File_Create_SS()
+                    
+                    if not Inet:
                         self.save_screenshot_locally(ss, Local)
-                threading.Event().wait(interval)
+                    else:
+                        try:
+                            # Upload the screenshot directly to S3
+                            self.upload_SS_to_s3(ss, self.file_name_ss, Local)
+                            print("Screenshot uploaded to S3.")
+                            # Update agent data from the config
+                            self.agent_data = AgentConfig.fetch_data()
+                        except Exception as e:
+                            print(f"Error uploading screenshot: {str(e)}")
+                            self.save_screenshot_locally(ss, Local)
+                    threading.Event().wait(interval)
             
     def save_screenshot_locally(self, ss, Local):
         """Save the screenshot locally if there's no internet."""
@@ -324,19 +302,43 @@ class HomeScreen(Screen):
         except Exception as e:
             print(f"Error saving screenshot locally: {str(e)}")
 
-    def upload_local_screenshots(self,stop):
-        while not stop[0]:
-            """Check for local screenshots and upload them to S3."""
+    def upload_locals(self):
+        while True:
             try:
                 script_dir = os.path.dirname(os.path.abspath(__file__))
-                directory = os.path.join(script_dir, "Queue", "Screen_Shot")
+
+                # Directories for logs and screenshots
+                log_directory = os.path.join(script_dir, "Queue", "Activity_Log")
+                screenshot_directory = os.path.join(script_dir, "Queue", "Screen_Shot")
+
+                Inet = self.check_internet_connection()  # Check internet connection once per loop
                 
-                if os.path.exists(directory):
-                    files = os.listdir(directory)
-                    for Local in files:
-                        Inet = self.check_internet_connection()
-                        if Inet:
-                            file_path = os.path.join(directory, Local)
+                if Inet:
+                    # Upload logs
+                    if os.path.exists(log_directory):
+                        files = os.listdir(log_directory)
+                        for Local in files:
+                            file_path = os.path.join(log_directory, Local)
+                            if os.path.isfile(file_path):
+                                try:
+                                    with open(file_path, 'r') as file:
+                                        log_content = file.read()
+
+                                    # Upload the log file to S3
+                                    self.upload_log_to_s3(self.file_name + "-" + Local, log_content)
+                                    logging.info(f"Uploaded log {self.file_name + '-' + Local} to S3.")
+
+                                    # Delete the file after successful upload
+                                    os.remove(file_path)
+                                    logging.info(f"Deleted local log file: {Local}")
+                                except Exception as e:
+                                    logging.error(f"Error uploading {Local} to S3: {str(e)}")
+
+                    # Upload screenshots
+                    if os.path.exists(screenshot_directory):
+                        files = os.listdir(screenshot_directory)
+                        for Local in files:
+                            file_path = os.path.join(screenshot_directory, Local)
                             if os.path.isfile(file_path):
                                 try:
                                     # Check if the file is a screenshot (e.g., ends with .png or .jpg)
@@ -344,17 +346,19 @@ class HomeScreen(Screen):
                                         # Open the image file to upload
                                         with Image.open(file_path) as image:
                                             # Upload the screenshot to S3
-                                            self.upload_SS_to_s3(image,self.file_name_ss,Local)  # Use the correct upload function
-                                            print(f"Uploaded screenshot {Local} to S3.")
+                                            self.upload_SS_to_s3(image, self.file_name_ss, Local)  # Use the correct upload function
+                                            logging.info(f"Uploaded screenshot {Local} to S3.")
                                         
                                         # Delete the file after successful upload
                                         os.remove(file_path)
-                                        print(f"Deleted local screenshot file: {Local}")
+                                        logging.info(f"Deleted local screenshot file: {Local}")
                                 except Exception as e:
-                                    print(f"Error uploading {Local} to S3: {str(e)}")
-            except Exception as e:
-                print(f"Error checking local screenshots for upload: {str(e)}")
+                                    logging.error(f"Error uploading {Local} to S3: {str(e)}")
 
+                threading.Event().wait(10)  # Wait before the next iteration
+
+            except Exception as e:
+                logging.error(f"Error during upload process: {str(e)}")
 
 class ConfigScreen(Screen):
     interval = StringProperty('10')  # Default value
@@ -370,15 +374,15 @@ class ConfigScreen(Screen):
         self.config_thread.start()
 
     def Config_Update(self):
-        self.Inet = self.check_internet_connection()
         while True:
+            self.Inet = self.check_internet_connection()
             if self.Inet:
                 new_data = AgentConfig.fetch_data()
                 # Update properties dynamically which will automatically reflect in the UI
                 self.interval = new_data.interval
                 self.screenshot = new_data.screenshot
                 self.blur = new_data.blur
-                time.sleep(int(self.interval))
+                time.sleep(10)
             
 
     def check_internet_connection(self):
