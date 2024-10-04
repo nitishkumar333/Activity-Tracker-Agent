@@ -7,7 +7,7 @@ A **React-based web app** allows users to configure settings like screenshot fre
 
 | **Architecture** |
 |:------------:|
-| ![Configuration Interface](public/full_chart.gif) |
+| ![Configuration Interface](public/full_charts.gif) |
 
 ## ✨ **Features**
 
