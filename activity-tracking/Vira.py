@@ -26,6 +26,11 @@ from PIL import Image, ImageFilter
 import boto3
 from io import BytesIO
 
+import logging
+
+# Set the global logging level to WARNING to suppress DEBUG and INFO messages
+logging.basicConfig(level=logging.WARNING)
+
 def check_if_already_running(script_name):
     current_pid = os.getpid()
     for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
@@ -114,7 +119,7 @@ class HomeScreen(Screen):
 
     def start_thread(self):
         self.stop_event.clear()  
-        self.activity_thread = threading.Thread(target=Final_Tracker, args=(self.bot_activity_detected,self.stop,self.percentage,self.is_plugged), daemon=True)
+        self.activity_thread = threading.Thread(target=Final_Tracker, args=(self.bot_activity_detected,self.stop), daemon=True)
         self.activity_Pop_thread = threading.Thread(target=self.monitor_bot_activity, args=(self.stop,), daemon=True)
         self.battery_thread = threading.Thread(target=self.check_battery_status, args=(self.stop,), daemon=True)
         self.Upload_local_thread = threading.Thread(target=self.upload_local_screenshots, args=(self.stop,),daemon=True)
@@ -276,34 +281,33 @@ class HomeScreen(Screen):
         Inet = self.check_internet_connection()
         if Inet:
             self.agent_data = AgentConfig.fetch_data()
-        
-        try:
-            interval = int(self.agent_data.interval)
-        except ValueError:
-            return
-        
-        while self.is_running:
-            ss = pyautogui.screenshot()
-            # Apply blur if needed
-            if self.agent_data.blur:
-                ss = ss.filter(ImageFilter.GaussianBlur(radius=5))
+        if self.agent_data.screenshot:
+            try:
+                interval = int(self.agent_data.interval)
+            except ValueError:
+                return
+            while self.is_running:
+                ss = pyautogui.screenshot()
+                # Apply blur if needed
+                if self.agent_data.blur:
+                    ss = ss.filter(ImageFilter.GaussianBlur(radius=5))
 
-            Inet = self.check_internet_connection()
-            Local = self.File_Create_SS()
-            
-            if not Inet:
-                self.save_screenshot_locally(ss, Local)
-            else:
-                try:
-                    # Upload the screenshot directly to S3
-                    self.upload_SS_to_s3(ss, self.file_name_ss, Local)
-                    print("Screenshot uploaded to S3.")
-                    # Update agent data from the config
-                    self.agent_data = AgentConfig.fetch_data()
-                except Exception as e:
-                    print(f"Error uploading screenshot: {str(e)}")
-                    break  # Break the loop or handle the error as needed
-            threading.Event().wait(interval)
+                Inet = self.check_internet_connection()
+                Local = self.File_Create_SS()
+                
+                if not Inet:
+                    self.save_screenshot_locally(ss, Local)
+                else:
+                    try:
+                        # Upload the screenshot directly to S3
+                        self.upload_SS_to_s3(ss, self.file_name_ss, Local)
+                        print("Screenshot uploaded to S3.")
+                        # Update agent data from the config
+                        self.agent_data = AgentConfig.fetch_data()
+                    except Exception as e:
+                        print(f"Error uploading screenshot: {str(e)}")
+                        self.save_screenshot_locally(ss, Local)
+                threading.Event().wait(interval)
             
     def save_screenshot_locally(self, ss, Local):
         """Save the screenshot locally if there's no internet."""
