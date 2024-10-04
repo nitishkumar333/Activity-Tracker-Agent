@@ -163,7 +163,7 @@ The screenshot functionality allows you to capture periodic screenshots and prov
 ### Setup
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/your-username/activity-tracker-agent.git
+   git clone https://github.com/nitishkumar333/activity-tracker-agent.git
    ```
 
 2. **Install dependencies:**
@@ -173,6 +173,6 @@ The screenshot functionality allows you to capture periodic screenshots and prov
 
 3. **Run the main script:**
    ```bash
-   python main.py
+   python vira.py
    ```
 ---

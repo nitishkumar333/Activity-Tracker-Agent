@@ -1,7 +1,3 @@
-Here's a more engaging version of the README with added emojis to make it visually appealing:
-
----
-
 # 📊 **Activity Tracker Agent**
 
 The **Activity Tracker Agent** is a Python-based desktop application designed to monitor user activity and distinguish between genuine user behavior and automated/scripted inputs. It features 🖱️ **mouse** and ⌨️ **keyboard** tracking, 🌍 **time zone detection**, and 📸 **configurable screenshot intervals**, with an optional blur feature. The application can upload screenshots to cloud storage, making it an ideal solution for tracking employee activity remotely.
@@ -10,8 +6,8 @@ The **Activity Tracker Agent** is a Python-based desktop application designed to
 A separate **React-based web app** allows users to configure settings like screenshot frequency, enable/disable screenshots, and choose between blurred or non-blurred images. The web interface provides an intuitive way to manage these options in real-time.
 
 | **Architecture** |
-|:------------:|
-| ![Configuration Interface](public/charts_whitebg.gif) |
+|:------------:
+| ![Configuration Interface](public/full_chart.gif) |
 
 ## ✨ **Features**
 
@@ -152,7 +148,4 @@ This project was developed by:
 - [Ayush Sharma](https://github.com/ayusharma03)
 - [Abhishek Dixit](https://github.com/Adixit8604)
 - [Nimisha](https://github.com/)
-
 --- 
-
-This enhanced README makes the app visually engaging and interactive with the help of emojis while maintaining all the important information.
