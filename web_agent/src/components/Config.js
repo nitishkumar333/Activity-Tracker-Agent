@@ -43,12 +43,6 @@ function Config() {
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
-    if (name === "interval" && value < 10) {
-      // Ensure interval is at least 10
-      alert("Interval must be greater than or equal to 10");
-      return;
-    }
-
     // Special handling for screenshot checkbox
     if (name === "screenshot" && !checked) {
       // If screenshot is unchecked, reset interval and blur
@@ -86,6 +80,11 @@ function Config() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (formData.interval < 10) {
+      // Ensure interval is at least 10
+      alert("Interval must be greater than or equal to 10");
+      return;
+    }
     await uploadToS3(formData);
   };
 
@@ -122,7 +121,6 @@ function Config() {
             value={formData.interval}
             onChange={handleChange}
             required
-            disabled={!formData.screenshot} // Disable if screenshot is not checked
           />
         </div>
 
