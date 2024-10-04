@@ -37,6 +37,7 @@ import logging
 
 # Set the global logging level to WARNING to suppress DEBUG and INFO messages
 logging.getLogger('botocore').setLevel(logging.CRITICAL)
+logging.basicConfig(level=logging.WARNING) 
 
 def check_if_already_running(script_name):
     current_pid = os.getpid()
@@ -105,6 +106,7 @@ class HomeScreen(Screen):
         self.file_name = f"{mac_address}/bot_detected/"
         self.Upload_local_thread = threading.Thread(target=self.upload_locals,daemon=True)
         self.Upload_local_thread.start()
+        self.Time_pop=[False]
 
     def start_timer(self):
         if not self.timer_event:  
@@ -130,7 +132,7 @@ class HomeScreen(Screen):
 
     def start_thread(self):
         self.stop_event.clear()  
-        self.activity_thread = threading.Thread(target=Final_Tracker, args=(self.bot_activity_detected,self.stop), daemon=True)
+        self.activity_thread = threading.Thread(target=Final_Tracker, args=(self.bot_activity_detected,self.stop,self.Time_pop), daemon=True)
         self.activity_Pop_thread = threading.Thread(target=self.monitor_bot_activity, args=(self.stop,), daemon=True)
         self.battery_thread = threading.Thread(target=self.check_battery_status, args=(self.stop,), daemon=True)
         # Start screenshot thread if screenshot feature is enabled
@@ -198,14 +200,36 @@ class HomeScreen(Screen):
                     except Exception as e:
                         print(f"Error saving log locally: {str(e)}")
 
-                Clock.schedule_once(self.show_bot_warning, 10)  # Show warning 
+                Clock.schedule_once(self.show_bot_warning, 0)  # Show warning 
                 self.bot_activity_detected[0] = False 
                 threading.Event().wait(5)  # Wait after logging bot activity
 
             # Check internet connection and log status
-            if not Inet:
-                Clock.schedule_once(self.show_Inet_warning, 10)
+            if self.Time_pop[0]:
+                Clock.schedule_once(self.show_Time_warning, 0)
+                self.Time_pop[0]=False
     
+    def show_bot_warning(self, dt):
+        notification.notify(
+            title="Warning",
+            message="Bot activity detected!",
+            timeout=10
+        )
+    
+    def show_Time_warning(self, dt):
+        notification.notify(
+            title="Warning",
+            message="TimeZone Change Detected detected!",
+            timeout=10
+        )
+
+    def show_Inet_warning(self, dt):
+        notification.notify(
+            title="Warning",
+            message="No Internet Connection Found! Please Connect soon!",
+            timeout=10
+        )
+
     def upload_log_to_s3(self, file_name, log_content):
         compressed_log = BytesIO()
         with gzip.GzipFile(fileobj=compressed_log, mode='wb') as gz_file:
@@ -231,19 +255,6 @@ class HomeScreen(Screen):
                 self.is_plugged = [battery.power_plugged]
             threading.Event().wait(600)  
     
-    def show_bot_warning(self, dt):
-        notification.notify(
-            title="Warning",
-            message="Bot activity detected!",
-            timeout=10
-        )
-
-    def show_Inet_warning(self, dt):
-        notification.notify(
-            title="Warning",
-            message="No Internet Connection Found! Please Connect soon!",
-            timeout=10
-        )
 
     def check_internet_connection(self):
         try:
@@ -297,6 +308,7 @@ class HomeScreen(Screen):
                     
                     if not Inet:
                         self.save_screenshot_locally(ss, Local)
+                        Clock.schedule_once(self.show_Inet_warning, 0)
                     else:
                         try:
                             # Upload the screenshot directly to S3
