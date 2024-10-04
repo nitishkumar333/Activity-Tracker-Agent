@@ -25,6 +25,7 @@ import os, uuid, re
 from PIL import Image, ImageFilter
 import boto3
 from io import BytesIO
+from cryptography.fernet import Fernet
 
 import logging
 
@@ -50,6 +51,8 @@ aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
 aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
 region_name = os.getenv('AWS_REGION')
 bucket_name = os.getenv('BUCKET_NAME')
+key = os.getenv('ENCRYPTION_KEY')
+cipher_suite = Fernet(key)
 
 s3_client = boto3.client(
     's3',
@@ -199,7 +202,8 @@ class HomeScreen(Screen):
     
     def upload_log_to_s3(self,file_name,log_content):
         # Upload the file to S3
-        s3_client.put_object(Bucket=bucket_name, Key=file_name, Body=log_content)
+        encrypted_log = cipher_suite.encrypt(log_content.encode())
+        s3_client.put_object(Bucket=bucket_name, Key=file_name, Body=encrypted_log)
         print(f"Log uploaded to S3 as {file_name}")
 
     def File_Create(self):
@@ -242,11 +246,16 @@ class HomeScreen(Screen):
 
     #ScreenShot Work  
     def upload_SS_to_s3(self, image,file_name,Local):
-        # Save screenshot to an in-memory file (BytesIO)
         img_byte_arr = BytesIO()
         image.save(img_byte_arr, format='PNG')
         img_byte_arr.seek(0) 
-        s3_client.upload_fileobj(img_byte_arr, bucket_name,file_name+Local)
+        # Encrypt the image bytes
+        encrypted_image = cipher_suite.encrypt(img_byte_arr.getvalue())
+        # Create a BytesIO object for the encrypted image
+        encrypted_image_io = BytesIO(encrypted_image)
+        
+        # Upload the encrypted image to S3
+        s3_client.upload_fileobj(encrypted_image_io,bucket_name, file_name + Local)
 
     def File_Create_SS(self):
         current_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
